@@ -36,7 +36,7 @@ class _RegisterParentsState extends State<RegisterParents> {
     final password = _passwordController.text.trim();
 
     try {
-      final url = Uri.parse('http://your-laravel-api-url/api/register-parent'); // replace with your actual API endpoint
+      final url = Uri.parse('https://vaccine-laravel-main-otillt.laravel.cloud/api/parent');
       final response = await http.post(
         url,
         headers: {'Content-Type': 'application/json'},
@@ -50,11 +50,11 @@ class _RegisterParentsState extends State<RegisterParents> {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final uid = data['Data']['id'].toString(); // assuming `id` is returned
+        final parentId = data['Data']['id']; 
 
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => ChildFormPage(uid: uid)),
+          MaterialPageRoute(builder: (context) => ChildFormPage(uid: parentId.toString())),
         );
       } else {
         final error = jsonDecode(response.body);
@@ -62,6 +62,7 @@ class _RegisterParentsState extends State<RegisterParents> {
           SnackBar(content: Text("Failed: ${error['message']}")),
         );
       }
+
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Error: $e")),

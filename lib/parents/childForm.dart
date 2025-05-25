@@ -3,6 +3,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:flutter_typeahead/flutter_typeahead.dart';
+
 
 class ChildFormPage extends StatefulWidget {
   final String uid;
@@ -19,61 +21,109 @@ class _ChildFormPageState extends State<ChildFormPage> {
   final TextEditingController _dobController = TextEditingController();
   final TextEditingController _weightController = TextEditingController();
   final TextEditingController _heightController = TextEditingController();
-  final TextEditingController _posyanduController = TextEditingController();
+  TextEditingController _posyanduSearchController = TextEditingController();
+  int? _selectedOrgId;
+
+  Widget _buildProviderField() {
+  return Padding(
+    padding: const EdgeInsets.symmetric(vertical: 8.0),
+    child: TypeAheadFormField(
+      textFieldConfiguration: TextFieldConfiguration(
+        controller: _posyanduSearchController,
+        decoration: InputDecoration(
+          filled: true,
+          fillColor: const Color(0xFFE8ECF4),
+          hintText: "Registered Posyandu",
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+        ),
+      ),
+      suggestionsCallback: (pattern) async {
+        final response = await http.get(Uri.parse('https://vaccine-laravel-main-otillt.laravel.cloud/api/organization?search=$pattern'));
+        
+        if (response.statusCode == 200) {
+          final Map<String, dynamic> jsonResponse = json.decode(response.body);
+          return jsonResponse['data'] ?? [];
+          
+        } else {
+          return [];
+        }
+      },
+      itemBuilder: (context, dynamic suggestion) {
+        return ListTile(
+          title: Text(suggestion['org_name']),
+        );
+      },
+      onSuggestionSelected: (dynamic suggestion) {
+        _posyanduSearchController.text = suggestion['org_name'];
+        _selectedOrgId = suggestion['id'];
+      },
+      validator: (value) {
+        if (_selectedOrgId == null) {
+          return 'Please select a valid posyandu from the list';
+        }
+        return null;
+      },
+    ),
+  );
+}
 
   Future<void> _addChild() async {
-    if (_formKey.currentState!.validate()) {
-      final Map<String, dynamic> childData = {
-        "childName": _childNameController.text.trim(),
-        "dateOfBirth": _dobController.text.trim(),
-        "weight": double.tryParse(_weightController.text.trim()) ?? 0.0,
-        "height": double.tryParse(_heightController.text.trim()) ?? 0.0,
-        "posyandu": _posyanduController.text.trim(),
-      };
+  if (_formKey.currentState!.validate()) {
+    final childData = {
+      "name": _childNameController.text.trim(),
+      "date_of_birth": _dobController.text.trim(),
+      "weight": double.tryParse(_weightController.text.trim()) ?? 0.0,
+      "height": double.tryParse(_heightController.text.trim()) ?? 0.0,
+      "medical_history": "none", // Update as needed
+      "allergy": "none", // Update as needed
+      "org_id": _selectedOrgId ?? 1, // Assuming it's an integer
+    };
 
-      final response = await http.post(
-        Uri.parse('http://YOUR_BACKEND_URL/child/${widget.uid}'),
-        headers: {"Content-Type": "application/json"},
-        body: jsonEncode(childData),
+    final response = await http.post(
+      Uri.parse('https://vaccine-laravel-main-otillt.laravel.cloud/api/parent/${widget.uid}/children'),
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode(childData),
+    );
+
+    if (response.statusCode == 201 || response.statusCode == 200) {
+      _childNameController.clear();
+      _dobController.clear();
+      _weightController.clear();
+      _heightController.clear();
+      _posyanduSearchController.clear();
+
+      showDialog(
+        context: context,
+        builder: (_) => AlertDialog(
+          title: const Text("Success"),
+          content: const Text("Child added successfully!"),
+          actions: [
+            TextButton(
+              child: const Text("OK"),
+              onPressed: () => Navigator.of(context).pop(),
+            )
+          ],
+        ),
       );
-
-      if (response.statusCode == 200) {
-        _childNameController.clear();
-        _dobController.clear();
-        _weightController.clear();
-        _heightController.clear();
-        _posyanduController.clear();
-
-        showDialog(
-          context: context,
-          builder: (_) => AlertDialog(
-            title: const Text("Success"),
-            content: const Text("Child added successfully!"),
-            actions: [
-              TextButton(
-                child: const Text("OK"),
-                onPressed: () => Navigator.of(context).pop(),
-              )
-            ],
-          ),
-        );
-      } else {
-        showDialog(
-          context: context,
-          builder: (_) => AlertDialog(
-            title: const Text("Error"),
-            content: Text("Failed to add child. (${response.statusCode})"),
-            actions: [
-              TextButton(
-                child: const Text("OK"),
-                onPressed: () => Navigator.of(context).pop(),
-              )
-            ],
-          ),
-        );
-      }
+    } else {
+      showDialog(
+        context: context,
+        builder: (_) => AlertDialog(
+          title: const Text("Error"),
+          content: Text("Failed to add child. (${response.body})"),
+          actions: [
+            TextButton(
+              child: const Text("OK"),
+              onPressed: () => Navigator.of(context).pop(),
+            )
+          ],
+        ),
+      );
     }
   }
+}
+
 
   Widget _buildInputField(String hint, TextEditingController controller,
       {bool readOnly = false, VoidCallback? onTap, TextInputType keyboardType = TextInputType.text}) {
@@ -149,7 +199,7 @@ class _ChildFormPageState extends State<ChildFormPage> {
                       readOnly: true, onTap: _selectDate),
                   _buildInputField("Weight (kg)", _weightController, keyboardType: TextInputType.number),
                   _buildInputField("Height (cm)", _heightController, keyboardType: TextInputType.number),
-                  _buildInputField("Registered Posyandu", _posyanduController),
+                  _buildProviderField(),
                   const SizedBox(height: 20),
                   ElevatedButton(
                     onPressed: _addChild,
