@@ -1,12 +1,25 @@
 import 'package:flutter/material.dart';
-import 'parents/registerParents.dart'; // Make sure this matches your file name
+import 'parents/login.dart'; 
+import 'package:shared_preferences/shared_preferences.dart';
+import 'parents/navbar.dart';
 
-void main() {
-  runApp(const MyApp());
+void main() async{
+  WidgetsFlutterBinding.ensureInitialized();
+  final prefs = await SharedPreferences.getInstance();
+
+  final parentId = prefs.getInt('parent_id');
+  final childId = prefs.getInt('child_id');
+
+  runApp(MyApp(
+    parentID: parentId,
+    childID: childId,
+  ));
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final int? parentID;
+  final int? childID;
+  const MyApp({super.key, this.parentID, this.childID});
 
   @override
   Widget build(BuildContext context) {
@@ -17,7 +30,12 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.pink,
         fontFamily: 'Urbanist', // Optional: if you want consistent font
       ),
-      home: const RegisterParents(),
+      home: (parentID != null && childID != null)
+          ? NavBar_screen(
+              parentID: parentID.toString(),
+              childID: childID!,
+            )
+          : LoginParents(),
     );
   }
 }

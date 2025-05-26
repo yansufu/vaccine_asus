@@ -1,35 +1,97 @@
 import 'package:flutter/material.dart';
 import 'navbar.dart';
+import 'package:intl/intl.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class HomeParent extends StatefulWidget {
-  const HomeParent({super.key});
+  final String parentID;
+  final int childID;
+
+  const HomeParent({super.key, required this.parentID, required this.childID});
 
   @override
   State<HomeParent> createState() => _HomeParentState();
 }
 
 class _HomeParentState extends State<HomeParent> {
+  List<dynamic> vaccinationStatusList = [];
+  List<dynamic> vaccinationList = [];
+  String? orgName;
+  String? childName;
+  DateTime? childDOB;
+  Map<String, dynamic>? childData;
+
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Home Parent',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Color(0xFFFFBBE0)),
-        useMaterial3: true,
-      ),
-      home: const NavBar_screen(),
-    );
+  void initState() {
+    super.initState();
+    fetchChildPeriod();
+    fetchChildData();
+    fetchChildStatus();
+  }
+
+  Future<void> fetchChildPeriod() async {
+  final response = await http.get(Uri.parse('https://vaccine-laravel-main-otillt.laravel.cloud/api/child/${widget.childID}/vaccinations/status'));
+  if (response.statusCode == 200) {
+    final List<dynamic> data = jsonDecode(response.body);
+
+    setState(() {
+      vaccinationStatusList = data;
+    });
+  }
+
+}
+  
+  Future<void> fetchChildStatus() async {
+  final response = await http.get(Uri.parse('https://vaccine-laravel-main-otillt.laravel.cloud/api/child/${widget.childID}/vaccinations'));
+  if (response.statusCode == 200) {
+    final List<dynamic> data = jsonDecode(response.body);
+
+    setState(() {
+      vaccinationList = data;
+    });
   }
 }
 
-class homeScreen extends StatelessWidget {
-  const homeScreen({super.key});
+  Future<void> fetchChildData()async {
+    final response = await http.get(Uri.parse('https://vaccine-laravel-main-otillt.laravel.cloud/api/child/${widget.childID}'));
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      setState(() {
+        orgName = data['organization']['org_name'];
+        childName = data['name'];
+        childDOB = DateTime.parse(data['date_of_birth']);
+      });
+    }
+  }
+
+  Future<void> _handleRefresh() async {
+  await Future.wait([
+    fetchChildData(),
+    fetchChildStatus(),
+    fetchChildPeriod(),
+  ]);
+}
+
+  //CALCULATE AGE
+  String calculateAge(DateTime childDOB) {
+    final now = DateTime.now();
+    final age = now.difference(childDOB);
+    final months = (age.inDays / 30).floor();
+    final days = age.inDays % 30;
+    return "$months months, $days days";
+  }
+
+  int getMonthAge(DateTime childDOB) {
+    final now = DateTime.now();
+    return (now.difference(childDOB).inDays / 30).floor();
+  }
 
   @override
   Widget build(BuildContext context) {
     double screenHeight = MediaQuery.of(context).size.height;
     double screenWidth = MediaQuery.of(context).size.width;
+
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
@@ -48,7 +110,8 @@ class homeScreen extends StatelessWidget {
         backgroundColor: Colors.transparent,
         toolbarHeight: 1,
       ),
-      body: SingleChildScrollView(
+      body: RefreshIndicator( onRefresh: _handleRefresh,
+      child: SingleChildScrollView(
         child: Column(
           children: [
             Column(
@@ -72,7 +135,7 @@ class homeScreen extends StatelessWidget {
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children: const [
+                      children: [
                         Text(
                           "Ibu Digi",
                           style: TextStyle(
@@ -88,7 +151,7 @@ class homeScreen extends StatelessWidget {
                             Icon(Icons.location_on, color: Colors.redAccent, size: 16),
                             SizedBox(width: 4),
                             Text(
-                              "Posyandu Jambangan, Candi Sidoarjo",
+                              orgName ?? 'Loading...',
                               style: TextStyle(
                                 fontSize: 13,
                                 color: Colors.white,
@@ -98,7 +161,7 @@ class homeScreen extends StatelessWidget {
                         ),
                         SizedBox(height: 4),
                         Text(
-                          "Annisa Delicia Yansaf",
+                          childName ?? 'Loading...',
                           style: TextStyle(
                             fontSize: 18,
                             color: Colors.white,
@@ -107,7 +170,7 @@ class homeScreen extends StatelessWidget {
                         ),
                         SizedBox(height: 4),
                         Text(
-                          "4 months, 24 days",
+                          childDOB != null ? calculateAge(childDOB!) : 'Loading...',
                           style: TextStyle(
                             fontSize: 13,
                             color: Colors.white70,
@@ -150,54 +213,35 @@ class homeScreen extends StatelessWidget {
                           ),
                         ),
                         SizedBox(height: 10.0),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Column(
-                              children: [
-                                Text("Hepatitis",
-                                  style: TextStyle(color: Colors.grey),),
-                                SizedBox(height: 5.0),
-                                Icon(
-                                  Icons.check_circle_outline_rounded,
-                                  color: Colors.lightGreenAccent,
-                                )
-                              ],
-                            ),
-                            Column(
-                              children: [
-                                Text("Polio",
-                                  style: TextStyle(color: Colors.grey),),
-                                SizedBox(height: 5.0),
-                                Icon(
-                                  Icons.check_circle_outline_rounded,
-                                  color: Colors.lightGreenAccent,
-                                )
-                              ],
-                            ),
-                            Column(
-                              children: [
-                                Text("HIB",
-                                  style: TextStyle(color: Colors.grey),),
-                                SizedBox(height: 5.0),
-                                Icon(
-                                  Icons.check_circle_outline_rounded,
-                                  color: Colors.lightGreenAccent,
-                                )
-                              ],
-                            ),
-                            Column(
-                              children: [
-                                Text("DTP",
-                                  style: TextStyle(color: Colors.grey),),
-                                SizedBox(height: 5.0),
-                                Icon(
-                                  Icons.radio_button_unchecked_rounded,
-                                  color: Colors.grey,
-                                )
-                              ],
-                            ),
-                          ],
+                        SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: Row(
+                            children: vaccinationStatusList.map<Widget>((vaccine) {
+                              final String name = vaccine['name'];
+                              final bool status = vaccine['status'];
+
+                              return Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                                child: Column(
+                                  children: [
+                                    Text(
+                                      name,
+                                      style: const TextStyle(color: Colors.grey),
+                                    ),
+                                    const SizedBox(height: 5.0),
+                                    Icon(
+                                      status == true
+                                          ? Icons.check_circle_outline_rounded
+                                          : Icons.radio_button_unchecked_rounded,
+                                      color: status == true
+                                          ? Colors.lightGreenAccent
+                                          : Colors.grey,
+                                    ),
+                                  ],
+                                ),
+                              );
+                            }).toList(),
+                          ),
                         )
                       ],
                     ),
@@ -252,126 +296,57 @@ class homeScreen extends StatelessWidget {
                             ),
                           ],
                         ),
-                        Container(
-                          margin: EdgeInsets.symmetric(vertical: 15),
-                          child:
-                          Table(
-                            columnWidths: const {
-                              0: FlexColumnWidth(),
-                              1: FlexColumnWidth(),
-                            },
-                            children: [
-                              TableRow(
-                                decoration: BoxDecoration(color: Color(0xFFFBF6F8)),
+                        SingleChildScrollView(
+                        child: Table(
+                          columnWidths: const {
+                            0: FlexColumnWidth(),
+                            1: FlexColumnWidth(),
+                          },
+                          border: TableBorder.all(color: Colors.grey.shade300),
+                          children: [
+                            // Table Header
+                            const TableRow(
+                              decoration: BoxDecoration(color: Color(0xFFFBF6F8)),
+                              children: [
+                                Padding(
+                                  padding: EdgeInsets.all(8),
+                                  child: Text('Vaccine Name', style: TextStyle(fontWeight: FontWeight.bold)),
+                                ),
+                                Padding(
+                                  padding: EdgeInsets.all(8),
+                                  child: Text('Status', style: TextStyle(fontWeight: FontWeight.bold)),
+                                ),
+                              ],
+                            ),
+
+                            // Table Rows from API data
+                            ...vaccinationList.map((item) {
+                              final vaccineName = item['vaccine']['name'] ?? 'Unknown';
+                              final isCompleted = item['is_completed'] ?? false;
+
+                              return TableRow(
+                                decoration: const BoxDecoration(color: Color(0xFFFDFDFD)),
                                 children: [
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Padding(
-                                        padding: EdgeInsets.all(8),
-                                        child: Text('Name', style: TextStyle(color: Color(0xFF777777), fontWeight: FontWeight.bold)),
+                                  Padding(
+                                    padding: const EdgeInsets.all(8),
+                                    child: Text(vaccineName),
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.all(8),
+                                    child: Text(
+                                      isCompleted ? 'Completed' : 'Not Completed',
+                                      style: TextStyle(
+                                        color: isCompleted ? Colors.green : Colors.red,
+                                        fontWeight: FontWeight.w500,
                                       ),
-                                      Padding(
-                                        padding: EdgeInsets.all(8),
-                                        child: Text('Completed', style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold)),
-                                      ),
-                                    ],
-                                  )
+                                    ),
+                                  ),
                                 ],
-                              ),
-                              TableRow(
-                                decoration: BoxDecoration(color: Colors.white),
-                                children: [
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Padding(
-                                        padding: EdgeInsets.all(8),
-                                        child: Text('Name', style: TextStyle(color: Color(0xFF777777), fontWeight: FontWeight.bold)),
-                                      ),
-                                      Padding(
-                                        padding: EdgeInsets.all(8),
-                                        child: Text('Completed', style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold)),
-                                      ),
-                                    ],
-                                  )
-                                ],
-                              ),
-                              TableRow(
-                                decoration: BoxDecoration(color: Color(0xFFFBF6F8)),
-                                children: [
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Padding(
-                                        padding: EdgeInsets.all(8),
-                                        child: Text('Name', style: TextStyle(color: Color(0xFF777777), fontWeight: FontWeight.bold)),
-                                      ),
-                                      Padding(
-                                        padding: EdgeInsets.all(8),
-                                        child: Text('Completed', style: TextStyle(color: Colors.green,fontWeight: FontWeight.bold)),
-                                      ),
-                                    ],
-                                  )
-                                ],
-                              ),
-                              TableRow(
-                                decoration: BoxDecoration(color: Color(0xFFFBF6F8)),
-                                children: [
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Padding(
-                                        padding: EdgeInsets.all(8),
-                                        child: Text('Name', style: TextStyle(color: Color(0xFF777777), fontWeight: FontWeight.bold)),
-                                      ),
-                                      Padding(
-                                        padding: EdgeInsets.all(8),
-                                        child: Text('Not Completed', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
-                                      ),
-                                    ],
-                                  )
-                                ],
-                              ),
-                              TableRow(
-                                decoration: BoxDecoration(color: Colors.white),
-                                children: [
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Padding(
-                                        padding: EdgeInsets.all(8),
-                                        child: Text('Name', style: TextStyle(color: Color(0xFF777777), fontWeight: FontWeight.bold)),
-                                      ),
-                                      Padding(
-                                        padding: EdgeInsets.all(8),
-                                        child: Text('Not Completed', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
-                                      ),
-                                    ],
-                                  )
-                                ],
-                              ),
-                              TableRow(
-                                decoration: BoxDecoration(color: Color(0xFFFBF6F8)),
-                                children: [
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Padding(
-                                        padding: EdgeInsets.all(8),
-                                        child: Text('Name', style: TextStyle(color: Color(0xFF777777), fontWeight: FontWeight.bold)),
-                                      ),
-                                      Padding(
-                                        padding: EdgeInsets.all(8),
-                                        child: Text('Not Completed', style: TextStyle(color: Colors.red,fontWeight: FontWeight.bold)),
-                                      ),
-                                    ],
-                                  )
-                                ],
-                              ),
-                            ],
-                          ),
-                        )
+                              );
+                            }).toList(),
+                          ],
+                        ),
+                      ),
                       ],
                     ),
                   )
@@ -379,7 +354,8 @@ class homeScreen extends StatelessWidget {
             )
           ],
         ),
-      ),
+      ),)
+      
     );
   }
 }

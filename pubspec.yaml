@@ -41,6 +41,7 @@ dependencies:
   path_provider_android: ^2.2.5
   mobile_scanner: ^3.5.1
   flutter_typeahead: ^4.0.0
+  shared_preferences: ^2.2.2
 
 
 

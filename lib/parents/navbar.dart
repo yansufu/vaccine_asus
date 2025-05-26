@@ -6,8 +6,10 @@ import 'profile.dart';
 
 class NavBar_screen extends StatefulWidget {
   final int initialPage;
+  final String parentID;
+  final int childID;
 
-  const NavBar_screen({this.initialPage = 0});
+  const NavBar_screen({this.initialPage = 0, super.key, required this.parentID, required this.childID});
 
   @override
   _NavBarState createState() => _NavBarState();
@@ -15,21 +17,25 @@ class NavBar_screen extends StatefulWidget {
 
 class _NavBarState extends State<NavBar_screen> {
   late int _pageIndex;
+  late int _selectedIndex;
+  late List<Widget> _pages;
 
   @override
   void initState() {
     super.initState();
     _pageIndex = widget.initialPage;
     _selectedIndex = widget.initialPage;
-  }
+  
 
-  final List<Widget> _pages = [
-    homeScreen(),
+  _pages = [
+    HomeParent(
+      parentID: widget.parentID,
+      childID: widget.childID,
+    ),
     QRScanPage(),
     ProfileScreen(),
   ];
-
-  late int _selectedIndex;
+  }
 
   @override
   Widget build(BuildContext context) {

@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
+import 'navbar.dart';
 
 
 class ChildFormPage extends StatefulWidget {
@@ -75,9 +76,9 @@ class _ChildFormPageState extends State<ChildFormPage> {
       "date_of_birth": _dobController.text.trim(),
       "weight": double.tryParse(_weightController.text.trim()) ?? 0.0,
       "height": double.tryParse(_heightController.text.trim()) ?? 0.0,
-      "medical_history": "none", // Update as needed
-      "allergy": "none", // Update as needed
-      "org_id": _selectedOrgId ?? 1, // Assuming it's an integer
+      "medical_history": "none", 
+      "allergy": "none", 
+      "org_id": _selectedOrgId ?? 1,
     };
 
     final response = await http.post(
@@ -85,25 +86,42 @@ class _ChildFormPageState extends State<ChildFormPage> {
       headers: {"Content-Type": "application/json"},
       body: jsonEncode(childData),
     );
+    
 
     if (response.statusCode == 201 || response.statusCode == 200) {
-      _childNameController.clear();
-      _dobController.clear();
-      _weightController.clear();
-      _heightController.clear();
-      _posyanduSearchController.clear();
+      final data = jsonDecode(response.body);
+      final childID = data['Data']['id'];
 
-      showDialog(
+      if (childID == null) {
+        showDialog(
         context: context,
         builder: (_) => AlertDialog(
-          title: const Text("Success"),
-          content: const Text("Child added successfully!"),
+          title: const Text("Error"),
+          content: Text("Failed to add child.\n\nServer response:\n${response.body}"),
           actions: [
             TextButton(
               child: const Text("OK"),
               onPressed: () => Navigator.of(context).pop(),
             )
           ],
+        ),
+      );
+
+        return;
+      }
+
+      _childNameController.clear();
+      _dobController.clear();
+      _weightController.clear();
+      _heightController.clear();
+      _posyanduSearchController.clear();
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => NavBar_screen(
+          parentID : widget.uid,
+          childID : childID,
+        )
         ),
       );
     } else {
