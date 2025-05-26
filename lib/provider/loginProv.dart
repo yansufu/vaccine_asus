@@ -4,17 +4,17 @@ import 'navbar.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'registerParents.dart';
+import 'registerProv.dart';
 
 
-class LoginParents extends StatefulWidget {
-  const LoginParents({super.key});
+class LoginProv extends StatefulWidget {
+  const LoginProv({super.key});
 
   @override
-  State<LoginParents> createState() => _LoginParentsState();
+  State<LoginProv> createState() => _LoginProvState();
 }
 
-class _LoginParentsState extends State<LoginParents> {
+class _LoginProvState extends State<LoginProv> {
   final _formKey = GlobalKey<FormState>();
 
   final TextEditingController _emailController = TextEditingController();
@@ -27,7 +27,7 @@ class _LoginParentsState extends State<LoginParents> {
     final password = _passwordController.text.trim();
 
     try {
-      final url = Uri.parse('https://vaccine-laravel-main-otillt.laravel.cloud/api/login');
+      final url = Uri.parse('https://vaccine-laravel-main-otillt.laravel.cloud/api/loginProvider');
       final response = await http.post(
         url,
         headers: {'Content-Type': 'application/json'},
@@ -39,17 +39,14 @@ class _LoginParentsState extends State<LoginParents> {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final parentId = data['parent_id']; 
-        final childID = data['child_id'];
+        final provID = data['provider_id']; 
         final prefs = await SharedPreferences.getInstance();
-        await prefs.setInt('parent_id', parentId);
-        await prefs.setInt('child_id', childID ?? 0);
+        await prefs.setInt('provID', provID);
 
         Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => NavBar_screen(
-          parentID : parentId.toString(),
-          childID : childID ?? 0,
+        MaterialPageRoute(builder: (context) => NavBar_prov(
+          provID: provID ?? 0,
         )
         ),
       );
@@ -196,7 +193,7 @@ class _LoginParentsState extends State<LoginParents> {
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => RegisterParents()),
+                  MaterialPageRoute(builder: (context) => RegisterProv()),
                 );
               },
               child: Text(

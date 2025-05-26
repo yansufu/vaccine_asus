@@ -179,7 +179,7 @@ class _ChildFormPageState extends State<ChildFormPage> {
   void _selectDate() async {
     DateTime? pickedDate = await showDatePicker(
       context: context,
-      initialDate: DateTime(2020),
+      initialDate: DateTime.now(),
       firstDate: DateTime(2000),
       lastDate: DateTime.now(),
     );

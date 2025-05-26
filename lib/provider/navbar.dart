@@ -1,47 +1,36 @@
 import 'package:flutter/material.dart';
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
-import 'home.dart';
-import 'QRscanner.dart';
+import 'QRgenerator.dart';
 import 'profile.dart';
 
-class NavBar_screen extends StatefulWidget {
+class NavBar_prov extends StatefulWidget {
   final int initialPage;
-  final String parentID;
-  final int childID;
+  final int provID;
 
-  const NavBar_screen({this.initialPage = 0, super.key, required this.parentID, required this.childID});
+  const NavBar_prov({this.initialPage = 0, super.key, required this.provID});
 
   @override
   _NavBarState createState() => _NavBarState();
 }
 
-class _NavBarState extends State<NavBar_screen> {
+class _NavBarState extends State<NavBar_prov> {
   late int _pageIndex;
   late int _selectedIndex;
-  late List<Widget> _pages;
 
   @override
   void initState() {
     super.initState();
     _pageIndex = widget.initialPage;
     _selectedIndex = widget.initialPage;
-  
-
-  _pages = [
-    HomeParent(
-      parentID: widget.parentID,
-      childID: widget.childID,
-    ),
-    QRScanPage(),
-    ProfilePage(
-      parentID: widget.parentID,
-      childID: widget.childID,
-    ),
-  ];
   }
 
   @override
   Widget build(BuildContext context) {
+    final List<Widget> _pages = [
+      ProfilePage(provID: widget.provID),
+      GenerateQRPage(provID: widget.provID),
+    ];
+
     return Scaffold(
       body: _pages[_pageIndex],
       bottomNavigationBar: Container(
@@ -70,11 +59,6 @@ class _NavBarState extends State<NavBar_screen> {
               Icons.qr_code_scanner,
               size: 30,
               color: _selectedIndex == 1 ? Colors.white : Color(0xFF877777),
-            ),
-            Icon(
-              Icons.person,
-              size: 30,
-              color: _selectedIndex == 2 ? Colors.white : Color(0xFF877777),
             ),
           ],
           animationDuration: Duration(milliseconds: 200),

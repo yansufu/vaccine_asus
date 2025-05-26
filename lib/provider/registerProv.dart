@@ -1,37 +1,46 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'navbar.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'registerParents.dart';
+import 'navbar.dart';
 
 
-class LoginParents extends StatefulWidget {
-  const LoginParents({super.key});
+class RegisterProv extends StatefulWidget {
+  const RegisterProv({super.key});
 
   @override
-  State<LoginParents> createState() => _LoginParentsState();
+  State<RegisterProv> createState() => _RegisterProvState();
 }
 
-class _LoginParentsState extends State<LoginParents> {
+class _RegisterProvState extends State<RegisterProv> {
   final _formKey = GlobalKey<FormState>();
 
+  final TextEditingController _provNameController = TextEditingController();
+  final TextEditingController _nikController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _confirmPasswordController = TextEditingController();
 
-  void _loginParent(String email, String password, BuildContext context) async {
+  void _registerProvider() async {
   if (_formKey.currentState!.validate()) {
+    if (_passwordController.text != _confirmPasswordController.text) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Passwords do not match")),
+      );
+      return;
+    }
 
+    final provName = _provNameController.text.trim();
     final email = _emailController.text.trim();
     final password = _passwordController.text.trim();
 
     try {
-      final url = Uri.parse('https://vaccine-laravel-main-otillt.laravel.cloud/api/login');
+      final url = Uri.parse('https://vaccine-laravel-main-otillt.laravel.cloud/api/proovider');
       final response = await http.post(
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
+          'name': provName,
           'email': email,
           'password': password,
         }),
@@ -39,34 +48,16 @@ class _LoginParentsState extends State<LoginParents> {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final parentId = data['parent_id']; 
-        final childID = data['child_id'];
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setInt('parent_id', parentId);
-        await prefs.setInt('child_id', childID ?? 0);
+        final provId = data['Data']['id']; 
 
-        Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => NavBar_screen(
-          parentID : parentId.toString(),
-          childID : childID ?? 0,
-        )
-        ),
-      );
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => NavBar_prov(provID: provId)),
+        );
       } else {
         final error = jsonDecode(response.body);
-        showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: Text("Login Response"),
-            content: Text(response.body),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text("OK"),
-              )
-            ],
-          ),
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Failed: ${error['message']}")),
         );
       }
 
@@ -159,14 +150,14 @@ class _LoginParentsState extends State<LoginParents> {
         child: ListView(
           children: [
             Text(
-              "Welcome back!",
+              "Hello!",
               style: GoogleFonts.urbanist(
                 fontWeight: FontWeight.bold,
                 fontSize: 28,
               ),
             ),
             Text(
-              "Glad to see you again!",
+              "Register to get started",
               style: GoogleFonts.urbanist(
                 fontWeight: FontWeight.bold,
                 fontSize: 28,
@@ -177,37 +168,28 @@ class _LoginParentsState extends State<LoginParents> {
               key: _formKey,
               child: Column(
                 children: [
-                  _buildInputField("Email", _emailController),
+                  _buildInputField("Provider's Name", _provNameController),
+                  _buildInputField("Email", _emailController, keyboardType: TextInputType.emailAddress),
                   _buildInputField("Password", _passwordController, obscure: true),
+                  _buildInputField("Confirm Password", _confirmPasswordController, obscure: true),
                   const SizedBox(height: 20),
                   ElevatedButton(
-                    onPressed: () {
-                      final email = _emailController.text;
-                      final password = _passwordController.text;
-                      _loginParent(email, password, context);
-                    },
-                    child: Text("Login"),
+                    onPressed: _registerProvider,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFFFC0DA),
+                      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: const Text(
+                      'Register',
+                      style: TextStyle(color: Colors.black, fontSize: 16),
+                    ),
                   ),
-
                 ],
               ),
             ),
-            GestureDetector(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => RegisterParents()),
-                );
-              },
-              child: Text(
-                "Don't have account? Register",
-                style: TextStyle(
-                  color: Colors.blue,
-                  decoration: TextDecoration.underline,
-                ),
-              ),
-            )
-
           ],
         ),
       ),

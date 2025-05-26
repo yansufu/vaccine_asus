@@ -2,18 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'login.dart';
-import 'navbar.dart';
-import 'package:intl/intl.dart';
+import 'loginProv.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
-import "package:vaccine_app/roleSelect.dart";
+import 'package:vaccine_app/roleSelect.dart';
 
 
 class ProfilePage extends StatefulWidget {
-  final int childID;
-  final String parentID;
+  final int provID;
 
-  const ProfilePage({super.key, required this.parentID, required this.childID});
+  const ProfilePage({super.key, required this.provID});
 
   @override
   State<ProfilePage> createState() => _ProfilePageState();
@@ -22,32 +19,16 @@ class ProfilePage extends StatefulWidget {
 class _ProfilePageState extends State<ProfilePage> {
   bool isEditing = false;
   String? orgName;
-  String? childName;
-  DateTime? childDOB;
-  double weight = 0.0;
-  double height = 0.0;
+  String? Name;
 
   TextEditingController nameController = TextEditingController();
-  TextEditingController dobController = TextEditingController();
-  TextEditingController weightController = TextEditingController();
-  TextEditingController heightController = TextEditingController();
-  TextEditingController medicalHistoryController = TextEditingController();
-  TextEditingController allergyController = TextEditingController();
   TextEditingController orgIdController = TextEditingController();
   int? _selectedOrgId;
 
   @override
   void initState() {
     super.initState();
-    fetchChildData();
-  }
-
-  String calculateAge(DateTime childDOB) {
-    final now = DateTime.now();
-    final age = now.difference(childDOB);
-    final months = (age.inDays / 30).floor();
-    final days = age.inDays % 30;
-    return "$months months, $days days";
+    fetchProvData();
   }
 
   Widget _buildProviderField() {
@@ -94,46 +75,37 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Future<void> fetchChildData() async {
-  final url = Uri.parse('https://vaccine-laravel-main-otillt.laravel.cloud/api/child/${widget.childID}');
+  Future<void> fetchProvData() async {
+  final url = Uri.parse('https://vaccine-laravel-main-otillt.laravel.cloud/api/provider/${widget.provID}');
   final response = await http.get(url);
 
   if (response.statusCode == 200) {
-    final data = jsonDecode(response.body); // NO ['data']
+    final data = jsonDecode(response.body); 
 
     setState(() {
-      nameController.text = data['name'] ?? '';
-      childName = data['name'];
-      dobController.text = data['date_of_birth'] ?? '';
-      childDOB = DateTime.tryParse(data['date_of_birth'] ?? '') ?? DateTime.now();
-      weightController.text = (data['weight'] ?? 0.0).toString();
-      heightController.text = (data['height'] ?? 0.0).toString();
-      medicalHistoryController.text = data['medical_history'] ?? '';
-      allergyController.text = data['allergy'] ?? '';
-      orgIdController.text = data['organization']?['id']?.toString() ?? '';
-      orgName = data['organization']?['org_name'];
+      nameController.text = data['data']['name'] ?? '';
+      Name = data['data']['name'];
+      orgIdController.text = data['data']['organization']?['id']?.toString() ?? '';
+      orgName = data['data']['organization']?['org_name'];
     });
   } else {
+    if (!mounted) return;
+    
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Failed to load profile data')),
     );
   }
 }
 
-  Future<void> updateChildData() async {
+  Future<void> updateProvData() async {
     final payload = {
       'name': nameController.text,
-      'date_of_birth': dobController.text.trim(),
-      'weight': double.tryParse(weightController.text),
-      'height': double.tryParse(heightController.text),
-      'medical_history': medicalHistoryController.text,
-      'allergy': allergyController.text,
       "org_id": _selectedOrgId ?? 1,
     };
     print("Sending payload: $payload");
 
     final response = await http.put(
-      Uri.parse('https://vaccine-laravel-main-otillt.laravel.cloud/api/child/${widget.childID}'),
+      Uri.parse('https://vaccine-laravel-main-otillt.laravel.cloud/api/provider/${widget.provID}'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode(payload),
     );
@@ -152,14 +124,13 @@ class _ProfilePageState extends State<ProfilePage> {
 
   Future<void> _handleRefresh() async {
     await Future.wait([
-      fetchChildData(),
+      fetchProvData(),
     ]);
   }
 
   void _handleLogout(BuildContext context) async {
   final prefs = await SharedPreferences.getInstance();
-  await prefs.remove('parent_id');
-  await prefs.remove('child_id');
+  await prefs.remove('provID');
 
   // Clear all preference
   await prefs.clear();
@@ -170,84 +141,6 @@ class _ProfilePageState extends State<ProfilePage> {
   );
 }
 
-  void _switchChild(BuildContext context) async {
-  final prefs = await SharedPreferences.getInstance();
-  final parentId = prefs.getInt('parent_id');
-
-  // Fetch children from your API (replace with actual endpoint)
-  final url = Uri.parse('https://vaccine-laravel-main-otillt.laravel.cloud/api/childByParent/$parentId');
-  final response = await http.get(url);
-
-  if (response.statusCode == 200) {
-    final data = jsonDecode(response.body);
-    final List children = data['data'];
-
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text('Select a Child'),
-          content: SizedBox(
-            width: double.maxFinite,
-            child: ListView.builder(
-              shrinkWrap: true,
-              itemCount: children.length,
-              itemBuilder: (context, index) {
-                final child = children[index];
-                return Card(
-                  child: ListTile(
-                    title: Text(child['name']),
-                    onTap: () async {
-                      await prefs.setInt('child_id', child['id']);
-                      Navigator.of(context).pop();
-
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => NavBar_screen(
-                            parentID: parentId.toString(),
-                            childID: child['id'],
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                );
-              },
-            ),
-          ),
-        );
-      },
-    );
-  } else {
-    showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: Text("Error"),
-        content: Text("Failed to fetch children"),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text("OK"),
-          )
-        ],
-      ),
-    );
-  }
-}
-
-  void _selectDate() async {
-      DateTime? pickedDate = await showDatePicker(
-        context: context,
-        initialDate: DateTime.now(),
-        firstDate: DateTime(2000),
-        lastDate: DateTime.now(),
-      );
-      if (pickedDate != null) {
-      String formattedDate = pickedDate.toUtc().toIso8601String();
-        dobController.text = formattedDate;
-      }
-    }
 
   Widget profileField(String label, TextEditingController controller, 
   {bool readOnly = false, VoidCallback? onTap, TextInputType? type}) {
@@ -333,16 +226,12 @@ class _ProfilePageState extends State<ProfilePage> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      childName ?? 'Loading...',
+                      Name ?? 'Loading...',
                       style: TextStyle(
                         fontSize: 18,
                         color: Colors.white,
                         fontWeight: FontWeight.w600,
                       ),
-                    ),
-                    Text(
-                      childDOB != null ? calculateAge(childDOB!) : 'Loading...',
-                      style: TextStyle(color: Colors.white70),
                     ),
                   ],
                 ),
@@ -359,15 +248,8 @@ class _ProfilePageState extends State<ProfilePage> {
                   if (value == 'logout') {
                     _handleLogout(context);
                   }
-                  else{
-                    _switchChild(context);
-                  }
                 },
                 itemBuilder: (BuildContext context) => [
-                  const PopupMenuItem<String>(
-                    value: 'switch',
-                    child: Text('Switch Child'),
-                  ),
                   const PopupMenuItem<String>(
                     value: 'logout',
                     child: Text('Log Out'),
@@ -392,7 +274,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   IconButton(
                     icon: Icon(isEditing ? Icons.check : Icons.edit, size: 20, color: Colors.grey),
                     onPressed: () {
-                      if (isEditing) updateChildData();
+                      if (isEditing) updateProvData();
                       setState(() {
                         isEditing = !isEditing;
                       });
@@ -402,12 +284,6 @@ class _ProfilePageState extends State<ProfilePage> {
               ),
               const SizedBox(height: 16),
               profileField('Name', nameController),
-              profileField("Date of Birth", dobController,
-                      readOnly: true, onTap: _selectDate),
-              profileField('Weight (Kg)', weightController, type: TextInputType.number),
-              profileField('Height (cm)', heightController, type: TextInputType.number),
-              profileField('Medical History', medicalHistoryController),
-              profileField('Allergy', allergyController),
               _buildProviderField(),
             ],
           ),
