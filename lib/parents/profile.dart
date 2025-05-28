@@ -50,7 +50,7 @@ class _ProfilePageState extends State<ProfilePage> {
     return "$months months, $days days";
   }
 
-  Widget _buildProviderField() {
+  Widget _buildOrganizationField() {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: TypeAheadFormField(
@@ -174,7 +174,7 @@ class _ProfilePageState extends State<ProfilePage> {
   final prefs = await SharedPreferences.getInstance();
   final parentId = prefs.getInt('parent_id');
 
-  // Fetch children from your API (replace with actual endpoint)
+  // Fetch children BY PARENT
   final url = Uri.parse('https://vaccine-laravel-main-otillt.laravel.cloud/api/childByParent/$parentId');
   final response = await http.get(url);
 
@@ -256,7 +256,7 @@ class _ProfilePageState extends State<ProfilePage> {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: TextField(
-        controller: isEditing ? null : controller,
+        controller: controller,
         enabled: isEditing,
         onTap: onTap, 
         keyboardType: type ?? TextInputType.text,
@@ -302,8 +302,7 @@ class _ProfilePageState extends State<ProfilePage> {
               flexibleSpace: Container(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [Color(0xFFFFC0DA), Color(0xFFFFC0DA).withOpacity(0.6)],
-                    begin: Alignment.topLeft,
+                    colors: [Color.fromARGB(255, 254, 171, 205), Color.fromARGB(255, 254, 171, 205).withOpacity(0.6)],                    begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
                   borderRadius: const BorderRadius.vertical(
@@ -408,7 +407,7 @@ class _ProfilePageState extends State<ProfilePage> {
               profileField('Height (cm)', heightController, type: TextInputType.number),
               profileField('Medical History', medicalHistoryController),
               profileField('Allergy', allergyController),
-              _buildProviderField(),
+              _buildOrganizationField(),
             ],
           ),
         ),

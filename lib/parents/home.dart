@@ -93,92 +93,71 @@ class _HomeParentState extends State<HomeParent> {
     double screenWidth = MediaQuery.of(context).size.width;
 
     return Scaffold(
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        flexibleSpace: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                Color(0xFFFFC0DA),
-                Color(0xFFFFC0DA).withOpacity(0.5),
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(130),
+        child: Stack(
+          children: [
+            AppBar(
+              elevation: 0,
+              backgroundColor: Colors.transparent,
+              flexibleSpace: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Color.fromARGB(255, 254, 171, 205), Color.fromARGB(255, 254, 171, 205).withOpacity(0.6)],                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: const BorderRadius.vertical(
+                    bottom: Radius.circular(30),
+                  ),
+                ),
+                padding: const EdgeInsets.only(left: 20, top: 50, right: 20, bottom: 10),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      "Ibu Digi",
+                      style: TextStyle(color: Colors.white, fontSize: 18),
+                    ),
+                    const SizedBox(height: 6),
+                    Row(
+                      children: [
+                        Icon(Icons.location_on, color: Colors.redAccent, size: 16),
+                        SizedBox(width: 4),
+                        Expanded(
+                          child: Text(
+                            orgName ?? 'Loading...',
+                            style: TextStyle(color: Colors.white),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      childName ?? 'Loading...',
+                      style: TextStyle(
+                        fontSize: 18,
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    Text(
+                      childDOB != null ? calculateAge(childDOB!) : 'Loading...',
+                      style: TextStyle(color: Colors.white70),
+                    ),
+                  ],
+                ),
+              ),
             ),
-          ),
+          ],
         ),
-        backgroundColor: Colors.transparent,
-        toolbarHeight: 1,
       ),
+
       body: RefreshIndicator( onRefresh: _handleRefresh,
       child: SingleChildScrollView(
         child: Column(
           children: [
             Column(
                 children: [
-                  //--------------------------------------HEADER--------------------------------------------
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          Color(0xFFFFC0DA),
-                          Color(0xFFFFC0DA).withOpacity(0.5)],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      borderRadius: BorderRadius.only(
-                        bottomLeft: Radius.circular(30),
-                        bottomRight: Radius.circular(30),
-                      ),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          "Ibu Digi",
-                          style: TextStyle(
-                            fontSize: 20,
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontFamily: 'Serif',
-                          ),
-                        ),
-                        SizedBox(height: 8),
-                        Row(
-                          children: [
-                            Icon(Icons.location_on, color: Colors.redAccent, size: 16),
-                            SizedBox(width: 4),
-                            Text(
-                              orgName ?? 'Loading...',
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ],
-                        ),
-                        SizedBox(height: 4),
-                        Text(
-                          childName ?? 'Loading...',
-                          style: TextStyle(
-                            fontSize: 18,
-                            color: Colors.white,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        SizedBox(height: 4),
-                        Text(
-                          childDOB != null ? calculateAge(childDOB!) : 'Loading...',
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: Colors.white70,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
                   //--------------------------------------BODY--------------------------------------------
                   //VACCINE PERIOD CONTAINER--------------------------------------------------------------
                   Container(
@@ -207,7 +186,7 @@ class _HomeParentState extends State<HomeParent> {
                               fontSize: 20
                           ),
                         ),
-                        Text("4 months",
+                        Text(childDOB != null ? calculateAge(childDOB!).trim() : 'Loading...',
                           style: TextStyle(
                               color: Colors.red
                           ),

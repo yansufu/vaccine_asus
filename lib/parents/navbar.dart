@@ -32,7 +32,10 @@ class _NavBarState extends State<NavBar_screen> {
       parentID: widget.parentID,
       childID: widget.childID,
     ),
-    QRScanPage(),
+    QRScanPage(
+      parentID: widget.parentID,
+      childID: widget.childID,
+    ),
     ProfilePage(
       parentID: widget.parentID,
       childID: widget.childID,

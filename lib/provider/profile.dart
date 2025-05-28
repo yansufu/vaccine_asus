@@ -19,7 +19,7 @@ class ProfilePage extends StatefulWidget {
 class _ProfilePageState extends State<ProfilePage> {
   bool isEditing = false;
   String? orgName;
-  String? Name;
+  String? provName;
 
   TextEditingController nameController = TextEditingController();
   TextEditingController orgIdController = TextEditingController();
@@ -31,7 +31,7 @@ class _ProfilePageState extends State<ProfilePage> {
     fetchProvData();
   }
 
-  Widget _buildProviderField() {
+  Widget _buildOrganizationField() {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: TypeAheadFormField(
@@ -76,30 +76,33 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Future<void> fetchProvData() async {
-  final url = Uri.parse('https://vaccine-laravel-main-otillt.laravel.cloud/api/provider/${widget.provID}');
-  final response = await http.get(url);
+    final url = Uri.parse('https://vaccine-laravel-main-otillt.laravel.cloud/api/provider/${widget.provID}');
+    final response = await http.get(url);
 
-  if (response.statusCode == 200) {
-    final data = jsonDecode(response.body); 
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      if (!mounted) return;
 
-    setState(() {
-      nameController.text = data['data']['name'] ?? '';
-      Name = data['data']['name'];
-      orgIdController.text = data['data']['organization']?['id']?.toString() ?? '';
-      orgName = data['data']['organization']?['org_name'];
-    });
-  } else {
-    if (!mounted) return;
-    
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Failed to load profile data')),
-    );
+      setState(() {
+        orgName = data['organization']['org_name'];
+        provName = data['name'];
+
+        nameController.text = data['name'];
+        orgIdController.text = data['organization']['org_name'];
+        _selectedOrgId = data['organization']['id']; // optional: retain original ID
+      });
+    } else {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to load profile data')),
+      );
+    }
   }
-}
+
 
   Future<void> updateProvData() async {
     final payload = {
-      'name': nameController.text,
+      "name": nameController.text,
       "org_id": _selectedOrgId ?? 1,
     };
     print("Sending payload: $payload");
@@ -112,12 +115,12 @@ class _ProfilePageState extends State<ProfilePage> {
 
     if (response.statusCode == 200) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Child data updated successfully')),
+        const SnackBar(content: Text('Provider data updated successfully')),
       );
     } else {
       print('Failed to update: ${response.body}');
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to update child data')),
+        const SnackBar(content: Text('Failed to update provider data')),
       );
     }
   }
@@ -142,16 +145,14 @@ class _ProfilePageState extends State<ProfilePage> {
 }
 
 
-  Widget profileField(String label, TextEditingController controller, 
-  {bool readOnly = false, VoidCallback? onTap, TextInputType? type}) {
-    final String currentValue = controller.text;
-
+  Widget profileField(String label, TextEditingController controller,
+    {bool readOnly = false, VoidCallback? onTap, TextInputType? type}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: TextField(
-        controller: isEditing ? null : controller,
-        enabled: isEditing,
-        onTap: onTap, 
+        controller: controller,
+        readOnly: !isEditing || readOnly,
+        onTap: onTap,
         keyboardType: type ?? TextInputType.text,
         cursorColor: Colors.pink,
         style: const TextStyle(
@@ -166,9 +167,7 @@ class _ProfilePageState extends State<ProfilePage> {
             fontWeight: FontWeight.bold,
           ),
           filled: true,
-          fillColor: isEditing ? Colors.white : Color(0xFFE8ECF4),
-          hintText: isEditing ? currentValue : null,
-          hintStyle: const TextStyle(color: Colors.grey),
+          fillColor: isEditing ? Colors.white : const Color(0xFFE8ECF4),
           contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
@@ -182,11 +181,12 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(130),
+        preferredSize: const Size.fromHeight(105),
         child: Stack(
           children: [
             AppBar(
@@ -195,7 +195,7 @@ class _ProfilePageState extends State<ProfilePage> {
               flexibleSpace: Container(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [Color(0xFFFFC0DA), Color(0xFFFFC0DA).withOpacity(0.6)],
+                    colors: [Color.fromARGB(255, 254, 171, 205), Color.fromARGB(255, 254, 171, 205).withOpacity(0.6)],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
@@ -208,10 +208,14 @@ class _ProfilePageState extends State<ProfilePage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text(
-                      "Ibu Digi",
-                      style: TextStyle(color: Colors.white, fontSize: 18),
-                    ),
-                    const SizedBox(height: 6),
+                          "Ibu Digi",
+                          style: TextStyle(
+                            fontSize: 20,
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontFamily: 'Serif',
+                          ),),
+                    const SizedBox(height: 12),
                     Row(
                       children: [
                         Icon(Icons.location_on, color: Colors.redAccent, size: 16),
@@ -225,14 +229,17 @@ class _ProfilePageState extends State<ProfilePage> {
                       ],
                     ),
                     const SizedBox(height: 4),
-                    Text(
-                      Name ?? 'Loading...',
+                    Row(children: [
+                      SizedBox(width: 20,),
+                      Text(
+                      provName ?? 'Loading...',
                       style: TextStyle(
                         fontSize: 18,
                         color: Colors.white,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
+                    ],)
                   ],
                 ),
               ),
@@ -268,7 +275,7 @@ class _ProfilePageState extends State<ProfilePage> {
           child: Column(
             children: [
               Row(
-                mainAxisAlignment: MainAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   const Text("Edit Profile", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
                   IconButton(
@@ -282,9 +289,8 @@ class _ProfilePageState extends State<ProfilePage> {
                   ),
                 ],
               ),
-              const SizedBox(height: 16),
               profileField('Name', nameController),
-              _buildProviderField(),
+              _buildOrganizationField(),
             ],
           ),
         ),

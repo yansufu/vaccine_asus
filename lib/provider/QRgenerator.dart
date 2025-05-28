@@ -22,13 +22,36 @@ class _GenerateQRPageState extends State<GenerateQRPage> {
   int? selectedVaccineId;
   String? selectedVaccineName;
   int? selectedPeriod;
+  String? orgName;
+  String? provName;
 
   @override
   void initState() {
     super.initState();
     fetchVaccineCategories();
+    fetchProvData();
   }
 
+  Future<void> fetchProvData() async {
+    final url = Uri.parse('https://vaccine-laravel-main-otillt.laravel.cloud/api/provider/${widget.provID}');
+    final response = await http.get(url);
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body); 
+
+      if (!mounted) return;
+      setState(() {
+        orgName = data['organization']['org_name'];
+        provName = data['name'];
+      });
+    } else {
+      if (!mounted) return;
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to load profile data')),
+      );
+    }
+  }
   Future<void> fetchVaccineCategories() async {
     final response = await http.get(Uri.parse('https://vaccine-laravel-main-otillt.laravel.cloud/api/category'));
 
@@ -101,35 +124,66 @@ class _GenerateQRPageState extends State<GenerateQRPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(
-        toolbarHeight: 80,
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        flexibleSpace: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Color(0xFFFFC0DA), Color(0xFFFFC0DA)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(105),
+        child: Stack(
+          children: [
+            AppBar(
+              elevation: 0,
+              backgroundColor: Colors.transparent,
+              flexibleSpace: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Color.fromARGB(255, 254, 171, 205), Color.fromARGB(255, 254, 171, 205).withOpacity(0.6)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: const BorderRadius.vertical(
+                    bottom: Radius.circular(30),
+                  ),
+                ),
+                padding: const EdgeInsets.only(left: 20, top: 50, right: 20, bottom: 10),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                          "Ibu Digi",
+                          style: TextStyle(
+                            fontSize: 20,
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontFamily: 'Serif',
+                          ),),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Icon(Icons.location_on, color: Colors.redAccent, size: 16),
+                        SizedBox(width: 4),
+                        Expanded(
+                          child: Text(
+                            orgName ?? 'Loading...',
+                            style: TextStyle(color: Colors.white),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Row(children: [
+                      SizedBox(width: 20,),
+                      Text(
+                      provName ?? 'Loading...',
+                      style: TextStyle(
+                        fontSize: 18,
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    ],)
+                  ],
+                ),
+              ),
             ),
-            borderRadius: BorderRadius.vertical(bottom: Radius.circular(30)),
-          ),
-          padding: const EdgeInsets.fromLTRB(20, 40, 20, 10),
-          alignment: Alignment.bottomLeft,
-          child: const Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              Text(
-                'Posyandu Jambangan, Candi Sidoarjo',
-                style: TextStyle(fontSize: 12, color: Colors.white70),
-              ),
-              Text(
-                'Dr. Lilik',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
-              ),
-            ],
-          ),
+          ],
         ),
       ),
       body: Padding(
@@ -241,14 +295,16 @@ class _GenerateQRPageState extends State<GenerateQRPage> {
                     }
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFCB799A),
+                    backgroundColor: Color.fromARGB(255, 254, 171, 205),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
                   ),
                   child: const Text(
                     'Generate',
-                    style: TextStyle(fontSize: 16),
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.white),
                   ),
                 ),
               )
