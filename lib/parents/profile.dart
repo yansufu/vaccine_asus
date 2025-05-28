@@ -56,6 +56,7 @@ class _ProfilePageState extends State<ProfilePage> {
       child: TypeAheadFormField(
         textFieldConfiguration: TextFieldConfiguration(
           controller: orgIdController,
+          enabled: isEditing,
           decoration: InputDecoration(
             filled: true,
             fillColor: const Color(0xFFE8ECF4),
@@ -102,15 +103,15 @@ class _ProfilePageState extends State<ProfilePage> {
     final data = jsonDecode(response.body); // NO ['data']
 
     setState(() {
-      nameController.text = data['name'] ?? '';
+      nameController.text = data['name'];
       childName = data['name'];
-      dobController.text = data['date_of_birth'] ?? '';
-      childDOB = DateTime.tryParse(data['date_of_birth'] ?? '') ?? DateTime.now();
+      dobController.text = data['date_of_birth'];
+      childDOB = DateTime.tryParse(data['date_of_birth']) ?? DateTime.now();
       weightController.text = (data['weight'] ?? 0.0).toString();
       heightController.text = (data['height'] ?? 0.0).toString();
-      medicalHistoryController.text = data['medical_history'] ?? '';
-      allergyController.text = data['allergy'] ?? '';
-      orgIdController.text = data['organization']?['id']?.toString() ?? '';
+      medicalHistoryController.text = data['medical_history'];
+      allergyController.text = data['allergy'];
+      orgIdController.text = data['organization']['org_name'].toString();
       orgName = data['organization']?['org_name'];
     });
   } else {

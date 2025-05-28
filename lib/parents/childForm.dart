@@ -25,7 +25,7 @@ class _ChildFormPageState extends State<ChildFormPage> {
   TextEditingController _posyanduSearchController = TextEditingController();
   int? _selectedOrgId;
 
-  Widget _buildProviderField() {
+  Widget _buildOrganizationField() {
   return Padding(
     padding: const EdgeInsets.symmetric(vertical: 8.0),
     child: TypeAheadFormField(
@@ -217,7 +217,7 @@ class _ChildFormPageState extends State<ChildFormPage> {
                       readOnly: true, onTap: _selectDate),
                   _buildInputField("Weight (kg)", _weightController, keyboardType: TextInputType.number),
                   _buildInputField("Height (cm)", _heightController, keyboardType: TextInputType.number),
-                  _buildProviderField(),
+                  _buildOrganizationField(),
                   const SizedBox(height: 20),
                   ElevatedButton(
                     onPressed: _addChild,

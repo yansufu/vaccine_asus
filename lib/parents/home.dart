@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'navbar.dart';
-import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
@@ -15,7 +13,7 @@ class HomeParent extends StatefulWidget {
 }
 
 class _HomeParentState extends State<HomeParent> {
-  List<dynamic> vaccinationStatusList = [];
+  List<dynamic> vaccinationThisPeriodList = [];
   List<dynamic> vaccinationList = [];
   String? orgName;
   String? childName;
@@ -36,7 +34,7 @@ class _HomeParentState extends State<HomeParent> {
     final List<dynamic> data = jsonDecode(response.body);
 
     setState(() {
-      vaccinationStatusList = data;
+      vaccinationThisPeriodList = data;
     });
   }
 
@@ -82,6 +80,15 @@ class _HomeParentState extends State<HomeParent> {
     return "$months months, $days days";
   }
 
+  //CALCULATE UPCOMING AGE
+
+  // String calculateUpcomingAge(DateTime childDOB) {
+  //   final now = DateTime.now();
+  //   final age = now.difference(childDOB);
+  //   final months = ((age.inDays / 30) + 1).floor();
+  //   return "$months months";
+  // }
+
   int getMonthAge(DateTime childDOB) {
     final now = DateTime.now();
     return (now.difference(childDOB).inDays / 30).floor();
@@ -116,7 +123,7 @@ class _HomeParentState extends State<HomeParent> {
                   children: [
                     const Text(
                       "Ibu Digi",
-                      style: TextStyle(color: Colors.white, fontSize: 18),
+                      style: TextStyle(color: Colors.white, fontSize: 18, fontFamily: 'Serif', fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 6),
                     Row(
@@ -161,13 +168,13 @@ class _HomeParentState extends State<HomeParent> {
                   //--------------------------------------BODY--------------------------------------------
                   //VACCINE PERIOD CONTAINER--------------------------------------------------------------
                   Container(
-                    width: screenWidth * 0.95,
-                    margin: EdgeInsets.symmetric(vertical: 15.0),
-                    padding: const EdgeInsets.all(20),
-                    alignment: Alignment.topLeft,
+                    //margin: EdgeInsets.symmetric(vertical: 15.0, horizontal: 10),
+                    margin: EdgeInsets.only(top: 15, left: 10, right:10),
+                    padding: const EdgeInsets.all(15),
+                    alignment: Alignment.center,
                     decoration: const BoxDecoration(
                         color: Colors.white,
-                        borderRadius: BorderRadius.all(Radius.circular(10)),
+                        borderRadius: BorderRadius.only(topLeft: Radius.circular(10), topRight: Radius.circular(10)),
                         boxShadow: [
                           BoxShadow(
                               color: Colors.grey,
@@ -183,19 +190,27 @@ class _HomeParentState extends State<HomeParent> {
                           style:
                           TextStyle(
                               fontWeight: FontWeight.bold,
-                              fontSize: 20
+                              fontSize: 16
                           ),
                         ),
-                        Text(childDOB != null ? calculateAge(childDOB!).trim() : 'Loading...',
-                          style: TextStyle(
-                              color: Colors.red
-                          ),
+                        SizedBox(height: 5,),
+                        Row(
+                          children: [
+                            Icon(Icons.timer, size: 15, color: const Color.fromARGB(255, 187, 234, 246),),
+                            SizedBox(width: 5,),
+                            Text(childDOB != null ? calculateAge(childDOB!).trim() : 'Loading...',
+                              style: TextStyle(
+                                  color: Colors.red,
+                                  fontSize: 12,
+                              ),
+                            ),
+                          ],
                         ),
                         SizedBox(height: 10.0),
                         SingleChildScrollView(
                           scrollDirection: Axis.horizontal,
                           child: Row(
-                            children: vaccinationStatusList.map<Widget>((vaccine) {
+                            children: vaccinationThisPeriodList.map<Widget>((vaccine) {
                               final String name = vaccine['name'];
                               final bool status = vaccine['status'];
 
@@ -205,7 +220,71 @@ class _HomeParentState extends State<HomeParent> {
                                   children: [
                                     Text(
                                       name,
-                                      style: const TextStyle(color: Colors.grey),
+                                      style: const TextStyle(color: Colors.grey, fontSize: 12),
+                                    ),
+                                    const SizedBox(height: 5.0),
+                                    Icon(
+                                      status == true
+                                          ? Icons.check_circle_outline_rounded
+                                          : Icons.radio_button_unchecked_rounded,
+                                      color: status == true
+                                          ? Colors.lightGreenAccent
+                                          : Colors.grey,
+                                    ),
+                                  ],
+                                ),
+                              );
+                            }).toList(),
+                          ),
+                        )
+                      ],
+                    ),
+                  ),
+                  Container(
+                    color: Colors.black,
+                    height: 1,
+                    margin: EdgeInsets.symmetric(horizontal: 10),
+                  ),
+                  Container(
+                    margin: EdgeInsets.only(right: 10, bottom:15, left:10 ),
+                    padding:  EdgeInsets.all(15),
+                    alignment: Alignment.topLeft,
+                    decoration: BoxDecoration(
+                        color: Color.fromARGB(255, 217, 218, 229),
+                        borderRadius: BorderRadius.only(bottomLeft: Radius.circular(10), bottomRight: Radius.circular(10)),
+                        boxShadow: [
+                          BoxShadow(
+                              color: Colors.grey,
+                              blurRadius: BorderSide.strokeAlignOutside,
+                              offset: Offset(0, 0.5)
+                          ),
+                        ]
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text("Upcoming...",
+                          style:
+                          TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16
+                          ),
+                        ),
+                        SizedBox(height: 10.0),
+                        SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: Row(
+                            children: vaccinationThisPeriodList.map<Widget>((vaccine) {
+                              final String name = vaccine['name'];
+                              final bool status = vaccine['status'];
+
+                              return Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                                child: Column(
+                                  children: [
+                                    Text(
+                                      name,
+                                      style: const TextStyle(color: Colors.grey, fontSize: 12),
                                     ),
                                     const SizedBox(height: 5.0),
                                     Icon(
@@ -240,7 +319,7 @@ class _HomeParentState extends State<HomeParent> {
                     width: screenWidth * 0.95,
                     margin: EdgeInsets.symmetric(vertical: 15.0),
                     padding: const EdgeInsets.all(20),
-                    alignment: Alignment.topLeft,
+                    alignment: Alignment.topCenter,
                     decoration: const BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.all(Radius.circular(10)),
@@ -263,25 +342,26 @@ class _HomeParentState extends State<HomeParent> {
                                 fontWeight: FontWeight.bold,
                                 fontSize: 16,
                               ),),
-                            Row(
-                              children: [
-                                Text("See All",
-                                  style: TextStyle(color: Colors.grey),),
-                                Icon(
-                                  Icons.keyboard_arrow_right_rounded,
-                                  color: Colors.grey,
-                                )
-                              ],
-                            ),
+                            // Row(
+                            //   children: [
+                            //     Text("See All",
+                            //       style: TextStyle(color: Colors.grey),),
+                            //     Icon(
+                            //       Icons.keyboard_arrow_right_rounded,
+                            //       color: Colors.grey,
+                            //     )
+                            //   ],
+                            // ),
                           ],
                         ),
+                        SizedBox(height: 20,),
                         SingleChildScrollView(
                         child: Table(
                           columnWidths: const {
                             0: FlexColumnWidth(),
                             1: FlexColumnWidth(),
                           },
-                          border: TableBorder.all(color: Colors.grey.shade300),
+                          border: TableBorder.all(color: Colors.grey.shade300, borderRadius: BorderRadius.all(Radius.circular(10))),
                           children: [
                             // Table Header
                             const TableRow(
@@ -302,7 +382,7 @@ class _HomeParentState extends State<HomeParent> {
                             ...vaccinationList.map((item) {
                               final vaccineName = item['vaccine']['name'] ?? 'Unknown';
                               final isCompleted = item['is_completed'] ?? false;
-
+                              
                               return TableRow(
                                 decoration: const BoxDecoration(color: Color(0xFFFDFDFD)),
                                 children: [
@@ -322,7 +402,7 @@ class _HomeParentState extends State<HomeParent> {
                                   ),
                                 ],
                               );
-                            }).toList(),
+                            })
                           ],
                         ),
                       ),
