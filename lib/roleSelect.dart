@@ -17,29 +17,28 @@ class roleSelect extends StatelessWidget {
     double screenWidth = MediaQuery.of(context).size.width;
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         toolbarHeight: 25,
         backgroundColor: Colors.white,
-        title: const Text("Ibu Digi",
-          style: TextStyle(
-            fontSize: 20,
-            color: Color(0xFFFFC0DA),
-            fontWeight: FontWeight.bold,
-            fontFamily: 'Serif',
-          ),),
-        centerTitle: false,
       ),
       body: Column(
         children: [
           Container(
             width: double.infinity,
             height: screenHeight * 0.3,
+            padding: EdgeInsets.all(10),
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  Colors.white,
-                  Color(0xFFFFC0DA)],
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
+              image: DecorationImage(
+                image: AssetImage('assets/Images/image.png'),
+                fit: BoxFit.cover, 
+              ),
+            ),
+            child: Text("Ibu Digi",
+              style: TextStyle(
+                fontSize: 16,
+                color: Color(0xFFFFC0DA),
+                fontWeight: FontWeight.bold,
+                fontFamily: 'Serif',
               ),
             ),
           ),

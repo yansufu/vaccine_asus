@@ -185,11 +185,13 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(105),
         child: Stack(
           children: [
             AppBar(
+              automaticallyImplyLeading: false,
               elevation: 0,
               backgroundColor: Colors.transparent,
               flexibleSpace: Container(
@@ -267,7 +269,6 @@ class _ProfilePageState extends State<ProfilePage> {
           ],
         ),
       ),
-
       body: RefreshIndicator(
         onRefresh: _handleRefresh,
         child: SingleChildScrollView(

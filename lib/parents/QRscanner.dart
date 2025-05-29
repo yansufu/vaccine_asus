@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'navbar.dart';
 
 class QRScanPage extends StatefulWidget {
   final String parentID;
@@ -37,38 +38,40 @@ class _QRScanPageState extends State<QRScanPage> {
     );
 
     return Scaffold(
+      backgroundColor: Colors.white,
             appBar: PreferredSize(
-        preferredSize: Size.fromHeight(50),
-        child: Stack(
-          children: [
-            AppBar(
-              elevation: 0,
-              backgroundColor: Colors.transparent,
-              flexibleSpace: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [Color.fromARGB(255, 254, 171, 205), Color.fromARGB(255, 254, 171, 205).withOpacity(0.6)],                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: const BorderRadius.vertical(
-                    bottom: Radius.circular(30),
-                  ),
-                ),
-                padding: const EdgeInsets.only(left: 20, top: 50, right: 20, bottom: 10),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    const Text(
-                      "Ibu Digi",
-                      style: TextStyle(color: Colors.white, fontSize: 18, fontFamily: 'Serif', fontWeight: FontWeight.bold),
+              preferredSize: Size.fromHeight(50),
+              child: Stack(
+                children: [
+                  AppBar(
+                    automaticallyImplyLeading: false,
+                    elevation: 0,
+                    backgroundColor: Colors.transparent,
+                    flexibleSpace: Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [Color.fromARGB(255, 254, 171, 205), Color.fromARGB(255, 254, 171, 205).withOpacity(0.6)],                    begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: const BorderRadius.vertical(
+                          bottom: Radius.circular(30),
+                        ),
+                      ),
+                      padding: const EdgeInsets.only(left: 20, top: 50, right: 20, bottom: 10),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          const Text(
+                            "Ibu Digi",
+                            style: TextStyle(color: Colors.white, fontSize: 18, fontFamily: 'Serif', fontWeight: FontWeight.bold),
+                          ),
+                        ],
+                      ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
-          ],
-        ),
-      ),
       body: Column(
         children: <Widget>[
           SizedBox(height: 60,),
@@ -145,10 +148,18 @@ class _QRScanPageState extends State<QRScanPage> {
         content: Text(message),
         actions: [
           TextButton(
-            child: const Text("OK"),
+            child: const Text("OK", selectionColor: Color.fromARGB(255, 254, 171, 205),),
             onPressed: () {
-              Navigator.pop(context);
-              Navigator.pop(context); // Go back after scan
+              Navigator.of(context).pushAndRemoveUntil(
+                MaterialPageRoute(
+                  builder: (context) => NavBar_screen(
+                    initialPage: 0,
+                    parentID: widget.parentID,
+                    childID: widget.childID,
+                  ),
+                ),
+                (route) => false, 
+              );
             },
           ),
         ],

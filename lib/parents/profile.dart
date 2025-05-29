@@ -293,17 +293,20 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(130),
+        preferredSize: const Size.fromHeight(115),
         child: Stack(
           children: [
             AppBar(
+              automaticallyImplyLeading: false,
               elevation: 0,
               backgroundColor: Colors.transparent,
               flexibleSpace: Container(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [Color.fromARGB(255, 254, 171, 205), Color.fromARGB(255, 254, 171, 205).withOpacity(0.6)],                    begin: Alignment.topLeft,
+                    colors: [Color.fromARGB(255, 254, 171, 205), Color.fromARGB(255, 254, 171, 205).withOpacity(0.6)],
+                    begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
                   borderRadius: const BorderRadius.vertical(
@@ -316,7 +319,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   children: [
                     const Text(
                       "Ibu Digi",
-                      style: TextStyle(color: Colors.white, fontSize: 18),
+                      style: TextStyle(color: Colors.white, fontSize: 18, fontFamily: 'Serif', fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 6),
                     Row(
@@ -331,19 +334,27 @@ class _ProfilePageState extends State<ProfilePage> {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      childName ?? 'Loading...',
-                      style: TextStyle(
-                        fontSize: 18,
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
+                    SizedBox(height: 4),
+                    Row(
+                      children: [
+                        SizedBox(width: 20,),
+                        Text(
+                        childName ?? 'Loading...',
+                        style: TextStyle(
+                          fontSize: 18,
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
+                      ],
                     ),
-                    Text(
+                    Row(children: [
+                      SizedBox(width: 20,),
+                      Text(
                       childDOB != null ? calculateAge(childDOB!) : 'Loading...',
                       style: TextStyle(color: Colors.white70),
                     ),
+                    ],)
                   ],
                 ),
               ),

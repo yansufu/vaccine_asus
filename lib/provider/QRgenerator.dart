@@ -130,6 +130,7 @@ class _GenerateQRPageState extends State<GenerateQRPage> {
         child: Stack(
           children: [
             AppBar(
+              automaticallyImplyLeading: false,
               elevation: 0,
               backgroundColor: Colors.transparent,
               flexibleSpace: Container(
