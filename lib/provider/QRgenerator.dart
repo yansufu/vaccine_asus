@@ -19,6 +19,7 @@ class _GenerateQRPageState extends State<GenerateQRPage> {
   List<int> periodOptions = [];
   List<Map<String, dynamic>> periodData = [];
 
+  int? selectedCategoryId;
   int? selectedVaccineId;
   String? selectedVaccineName;
   int? selectedPeriod;
@@ -201,7 +202,7 @@ class _GenerateQRPageState extends State<GenerateQRPage> {
 
               // Vaccine Dropdown
               DropdownButtonFormField<int>(
-                value: selectedVaccineId,
+                value: selectedCategoryId,
                 items: vaccineOptions.map((vaccine) {
                   return DropdownMenuItem<int>(
                     value: vaccine['id'],
@@ -210,7 +211,7 @@ class _GenerateQRPageState extends State<GenerateQRPage> {
                 }).toList(),
                 onChanged: (value) {
                   setState(() {
-                    selectedVaccineId = value;
+                    selectedCategoryId = value;
                   });
 
                   fetchPeriodsByCategory(value!);
@@ -240,7 +241,12 @@ class _GenerateQRPageState extends State<GenerateQRPage> {
                 }).toList(),
                 onChanged: (value) {
                   setState(() {
-                    selectedPeriod = value;
+                    final matchedRecord = periodData.firstWhere(
+                      (item) => item['period'] == value,
+                      orElse: () => {},
+                    );
+                    selectedVaccineId = matchedRecord['id'];
+
                   });
                 },
                 decoration: InputDecoration(
@@ -281,12 +287,14 @@ class _GenerateQRPageState extends State<GenerateQRPage> {
                 child: ElevatedButton(
                   onPressed: () {
                     if (_formKey.currentState!.validate()) {
-                      if (selectedVaccineId != null) {
+                      if (selectedCategoryId != null) {
                         _showQRPopup(
                           selectedVaccineId!,
                           lotIdController.text.trim(),
                           widget.provID,
                         );
+                        print('Vaccine ID: $selectedVaccineId, Lot ID: ${lotIdController.text.trim()}, Provider ID: ${widget.provID}');
+
                       } else {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(content: Text('Please select a vaccine')),

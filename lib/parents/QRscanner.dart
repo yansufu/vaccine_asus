@@ -114,58 +114,6 @@ class _QRScanPageState extends State<QRScanPage> {
     );
   }
 
-  Widget _buildHeader() {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
-      width: double.infinity,
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            const Color(0xFFFFC0DA),
-            const Color(0xFFFFC0DA).withOpacity(0.5),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: const BorderRadius.only(
-          bottomLeft: Radius.circular(30),
-          bottomRight: Radius.circular(30),
-        ),
-      ),
-      child: const Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            "Ibu Digi",
-            style: TextStyle(
-              fontSize: 20,
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-              fontFamily: 'Serif',
-            ),
-          ),
-          SizedBox(height: 8),
-          Text(
-            "Annisa Delicia Yansaf",
-            style: TextStyle(
-              fontSize: 18,
-              color: Colors.white,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          SizedBox(height: 4),
-          Text(
-            "4 months, 24 days",
-            style: TextStyle(
-              fontSize: 13,
-              color: Colors.white70,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Future<void> _handleQRData(String rawData) async {
     try {
       final data = json.decode(rawData);
