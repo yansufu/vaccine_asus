@@ -14,6 +14,7 @@ class HomeParent extends StatefulWidget {
 
 class _HomeParentState extends State<HomeParent> {
   List<dynamic> vaccinationThisPeriodList = [];
+  List<dynamic> vaccinationNextPeriodList = [];
   List<dynamic> vaccinationList = [];
   String? orgName;
   String? childName;
@@ -24,6 +25,7 @@ class _HomeParentState extends State<HomeParent> {
   void initState() {
     super.initState();
     fetchChildPeriod();
+    fetchNextPeriod();
     fetchChildData();
     fetchChildStatus();
   }
@@ -35,6 +37,18 @@ class _HomeParentState extends State<HomeParent> {
 
     setState(() {
       vaccinationThisPeriodList = data;
+    });
+  }
+
+}
+
+  Future<void> fetchNextPeriod() async {
+  final response = await http.get(Uri.parse('https://vaccine-laravel-main-otillt.laravel.cloud/api/child/${widget.childID}/vaccinations/nextStatus'));
+  if (response.statusCode == 200) {
+    final List<dynamic> data = jsonDecode(response.body);
+
+    setState(() {
+      vaccinationNextPeriodList = data;
     });
   }
 
@@ -284,7 +298,7 @@ class _HomeParentState extends State<HomeParent> {
                         SingleChildScrollView(
                           scrollDirection: Axis.horizontal,
                           child: Row(
-                            children: vaccinationThisPeriodList.map<Widget>((vaccine) {
+                            children: vaccinationNextPeriodList.map<Widget>((vaccine) {
                               final String name = vaccine['name'];
                               final bool status = vaccine['status'];
 
