@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'navbar.dart';
 import 'loginProv.dart';
+import 'package:flutter_typeahead/flutter_typeahead.dart';
 
 
 class RegisterProv extends StatefulWidget {
@@ -20,6 +21,52 @@ class _RegisterProvState extends State<RegisterProv> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController = TextEditingController();
+  TextEditingController orgIdController = TextEditingController();
+  int? _selectedOrgId;
+
+  Widget _buildOrganizationField() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: TypeAheadFormField(
+        textFieldConfiguration: TextFieldConfiguration(
+          controller: orgIdController,
+          decoration: InputDecoration(
+            filled: true,
+            fillColor: const Color(0xFFE8ECF4),
+            hintText: "Registered Posyandu",
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+          ),
+        ),
+        suggestionsCallback: (pattern) async {
+          final response = await http.get(Uri.parse('https://vaccine-laravel-main-otillt.laravel.cloud/api/organization?search=$pattern'));
+          
+          if (response.statusCode == 200) {
+            final Map<String, dynamic> jsonResponse = json.decode(response.body);
+            return jsonResponse['data'] ?? [];
+            
+          } else {
+            return [];
+          }
+        },
+        itemBuilder: (context, dynamic suggestion) {
+          return ListTile(
+            title: Text(suggestion['org_name']),
+          );
+        },
+        onSuggestionSelected: (dynamic suggestion) {
+          orgIdController.text = suggestion['org_name'];
+          _selectedOrgId = suggestion['id'];
+        },
+        validator: (value) {
+          if (_selectedOrgId == null) {
+            return 'Please select a valid posyandu from the list';
+          }
+          return null;
+        },
+      ),
+    );
+  }
 
   void _registerProvider() async {
   if (_formKey.currentState!.validate()) {
@@ -33,14 +80,16 @@ class _RegisterProvState extends State<RegisterProv> {
     final provName = _provNameController.text.trim();
     final email = _emailController.text.trim();
     final password = _passwordController.text.trim();
+    final org_id = _selectedOrgId ?? 1;
 
     try {
-      final url = Uri.parse('https://vaccine-laravel-main-otillt.laravel.cloud/api/proovider');
+      final url = Uri.parse('https://vaccine-laravel-main-otillt.laravel.cloud/api/provider');
       final response = await http.post(
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'name': provName,
+          'org_id' : org_id,
           'email': email,
           'password': password,
         }),
@@ -111,6 +160,7 @@ class _RegisterProvState extends State<RegisterProv> {
     final screenWidth = MediaQuery.of(context).size.width;
 
     return Scaffold(
+      backgroundColor: Colors.white10,
       appBar: AppBar(
         automaticallyImplyLeading: false,
         backgroundColor: Colors.white,
@@ -185,6 +235,7 @@ class _RegisterProvState extends State<RegisterProv> {
                   _buildInputField("Email", _emailController, keyboardType: TextInputType.emailAddress),
                   _buildInputField("Password", _passwordController, obscure: true),
                   _buildInputField("Confirm Password", _confirmPasswordController, obscure: true),
+                  _buildOrganizationField(),
                   const SizedBox(height: 20),
                   ElevatedButton(
                     onPressed: _registerProvider,
@@ -203,7 +254,7 @@ class _RegisterProvState extends State<RegisterProv> {
                 ],
               ),
             ),
-            SizedBox(height: screenHeight * 0.25,),
+            SizedBox(height: screenHeight * 0.17,),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [

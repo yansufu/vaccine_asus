@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'login.dart';
 import 'navbar.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
 import "package:vaccine_app/roleSelect.dart";
+import 'childForm.dart';
 
 
 class ProfilePage extends StatefulWidget {
@@ -173,9 +173,26 @@ class _ProfilePageState extends State<ProfilePage> {
 
   void _switchChild(BuildContext context) async {
   final prefs = await SharedPreferences.getInstance();
-  final parentId = prefs.getInt('parent_id');
+  final parentId = widget.parentID ;
 
-  // Fetch children BY PARENT
+  if (parentId == null) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: Text("Error"),
+        content: Text("Parent ID not found. Please log in again."),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text("OK"),
+          )
+        ],
+      ),
+    );
+    return;
+  }
+
+  // Fetch children by parent ID
   final url = Uri.parse('https://vaccine-laravel-main-otillt.laravel.cloud/api/childByParent/$parentId');
   final response = await http.get(url);
 
@@ -187,34 +204,60 @@ class _ProfilePageState extends State<ProfilePage> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text('Select a Child'),
+          title: const Text('Select a Child'),
           content: SizedBox(
             width: double.maxFinite,
-            child: ListView.builder(
-              shrinkWrap: true,
-              itemCount: children.length,
-              itemBuilder: (context, index) {
-                final child = children[index];
-                return Card(
-                  child: ListTile(
-                    title: Text(child['name']),
-                    onTap: () async {
-                      await prefs.setInt('child_id', child['id']);
-                      Navigator.of(context).pop();
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Expanded(
+                  child: children.isEmpty
+                      ? Center(child: Text("No children found."))
+                      : ListView.builder(
+                          shrinkWrap: true,
+                          itemCount: children.length,
+                          itemBuilder: (context, index) {
+                            final child = children[index];
+                            return Card(
+                              child: ListTile(
+                                title: Text(child['name'] ?? 'Unnamed Child'),
+                                onTap: () async {
+                                  await prefs.setInt('child_id', child['id']);
+                                  Navigator.of(context).pop();
 
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => NavBar_screen(
-                            parentID: parentId.toString(),
-                            childID: child['id'],
-                          ),
+                                  Navigator.pushReplacement(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => NavBar_screen(
+                                        parentID: parentId.toString(),
+                                        childID: child['id'],
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                            );
+                          },
                         ),
-                      );
-                    },
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Color(0xFFFFC0DA),
                   ),
-                );
-              },
+                  icon: Icon(Icons.add),
+                  label: Text("Add Child"),
+                  onPressed: () {
+                    Navigator.of(context).pop(); // Close dialog first
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ChildFormPage(uid: parentId.toString()),
+                      ),
+                    );
+                  },
+                ),
+              ],
             ),
           ),
         );
@@ -236,6 +279,7 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 }
+
 
   void _selectDate() async {
       DateTime? pickedDate = await showDatePicker(
