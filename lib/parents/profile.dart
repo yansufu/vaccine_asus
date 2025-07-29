@@ -53,25 +53,13 @@ class _ProfilePageState extends State<ProfilePage> {
   Widget _buildOrganizationField() {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: TypeAheadFormField(
-        textFieldConfiguration: TextFieldConfiguration(
-          controller: orgIdController,
-          enabled: isEditing,
-          decoration: InputDecoration(
-            filled: true,
-            fillColor: const Color(0xFFE8ECF4),
-            hintText: "Registered Posyandu",
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-          ),
-        ),
+      child: TypeAheadField(
         suggestionsCallback: (pattern) async {
-          final response = await http.get(Uri.parse('https://vaccine-laravel-main-otillt.laravel.cloud/api/organization?search=$pattern'));
-          
+          final response = await http.get(Uri.parse('https://vaccine-laravel-main-fi5xjq.laravel.cloud/api/organization'));
+
           if (response.statusCode == 200) {
             final Map<String, dynamic> jsonResponse = json.decode(response.body);
             return jsonResponse['data'] ?? [];
-            
           } else {
             return [];
           }
@@ -81,22 +69,31 @@ class _ProfilePageState extends State<ProfilePage> {
             title: Text(suggestion['org_name']),
           );
         },
-        onSuggestionSelected: (dynamic suggestion) {
+        onSelected: (dynamic suggestion) {
           orgIdController.text = suggestion['org_name'];
           _selectedOrgId = suggestion['id'];
         },
-        validator: (value) {
-          if (_selectedOrgId == null) {
-            return 'Please select a valid posyandu from the list';
-          }
-          return null;
+        builder: (context, controller, focusNode) {
+          orgIdController = controller;
+          return TextField(
+            controller: controller,
+            focusNode: focusNode,
+            decoration: InputDecoration(
+              filled: true,
+              fillColor: const Color(0xFFE8ECF4),
+              hintText: "Registered Posyandu",
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+          );
         },
       ),
     );
   }
 
+
   Future<void> fetchChildData() async {
-  final url = Uri.parse('https://vaccine-laravel-main-otillt.laravel.cloud/api/child/${widget.childID}');
+  final url = Uri.parse('https://vaccine-laravel-main-fi5xjq.laravel.cloud/api/child/${widget.childID}');
   final response = await http.get(url);
 
   if (response.statusCode == 200) {
@@ -134,7 +131,7 @@ class _ProfilePageState extends State<ProfilePage> {
     print("Sending payload: $payload");
 
     final response = await http.put(
-      Uri.parse('https://vaccine-laravel-main-otillt.laravel.cloud/api/child/${widget.childID}'),
+      Uri.parse('https://vaccine-laravel-main-fi5xjq.laravel.cloud/api/child/${widget.childID}'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode(payload),
     );
@@ -176,7 +173,7 @@ class _ProfilePageState extends State<ProfilePage> {
   final parentId = prefs.getInt('parent_id');
 
   // Fetch children BY PARENT
-  final url = Uri.parse('https://vaccine-laravel-main-otillt.laravel.cloud/api/childByParent/$parentId');
+  final url = Uri.parse('https://vaccine-laravel-main-fi5xjq.laravel.cloud/api/childByParent/$parentId');
   final response = await http.get(url);
 
   if (response.statusCode == 200) {

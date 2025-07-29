@@ -7,6 +7,7 @@ import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'navbar.dart';
 
 
+
 class ChildFormPage extends StatefulWidget {
   final String uid;
 
@@ -26,48 +27,47 @@ class _ChildFormPageState extends State<ChildFormPage> {
   int? _selectedOrgId;
 
   Widget _buildOrganizationField() {
-  return Padding(
-    padding: const EdgeInsets.symmetric(vertical: 8.0),
-    child: TypeAheadFormField(
-      textFieldConfiguration: TextFieldConfiguration(
-        controller: _posyanduSearchController,
-        decoration: InputDecoration(
-          filled: true,
-          fillColor: const Color(0xFFE8ECF4),
-          hintText: "Registered Posyandu",
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-        ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: TypeAheadField(
+        suggestionsCallback: (pattern) async {
+          final response = await http.get(Uri.parse('https://vaccine-laravel-main-fi5xjq.laravel.cloud/api/organization'));
+
+          if (response.statusCode == 200) {
+            final Map<String, dynamic> jsonResponse = json.decode(response.body);
+            return jsonResponse['data'] ?? [];
+          } else {
+            return [];
+          }
+        },
+        itemBuilder: (context, dynamic suggestion) {
+          return ListTile(
+            title: Text(suggestion['org_name']),
+          );
+        },
+        onSelected: (dynamic suggestion) {
+          _posyanduSearchController.text = suggestion['org_name'];
+          _selectedOrgId = suggestion['id'];
+        },
+        builder: (context, controller, focusNode) {
+          _posyanduSearchController = controller;
+          return TextField(
+            controller: controller,
+            focusNode: focusNode,
+            decoration: InputDecoration(
+              filled: true,
+              fillColor: const Color(0xFFE8ECF4),
+              hintText: "Registered Posyandu",
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+          );
+        },
       ),
-      suggestionsCallback: (pattern) async {
-        final response = await http.get(Uri.parse('https://vaccine-laravel-main-otillt.laravel.cloud/api/organization?search=$pattern'));
-        
-        if (response.statusCode == 200) {
-          final Map<String, dynamic> jsonResponse = json.decode(response.body);
-          return jsonResponse['data'] ?? [];
-          
-        } else {
-          return [];
-        }
-      },
-      itemBuilder: (context, dynamic suggestion) {
-        return ListTile(
-          title: Text(suggestion['org_name']),
-        );
-      },
-      onSuggestionSelected: (dynamic suggestion) {
-        _posyanduSearchController.text = suggestion['org_name'];
-        _selectedOrgId = suggestion['id'];
-      },
-      validator: (value) {
-        if (_selectedOrgId == null) {
-          return 'Please select a valid posyandu from the list';
-        }
-        return null;
-      },
-    ),
-  );
-}
+    );
+  }
+
+
 
   Future<void> _addChild() async {
   if (_formKey.currentState!.validate()) {
@@ -82,7 +82,7 @@ class _ChildFormPageState extends State<ChildFormPage> {
     };
 
     final response = await http.post(
-      Uri.parse('https://vaccine-laravel-main-otillt.laravel.cloud/api/parent/${widget.uid}/children'),
+      Uri.parse('https://vaccine-laravel-main-fi5xjq.laravel.cloud/api/parent/${widget.uid}/children'),
       headers: {"Content-Type": "application/json"},
       body: jsonEncode(childData),
     );

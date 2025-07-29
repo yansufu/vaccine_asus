@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vaccine_app/roleSelect.dart';
 import 'parents/navbar.dart';
-import 'provider/navbar.dart';
- 
+//import 'provider/navbar.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final prefs = await SharedPreferences.getInstance();
@@ -45,7 +45,7 @@ class MyApp extends StatelessWidget {
       homeScreen = NavBar_screen(parentID: parentID!, childID: childID!);
     } else if (provID != null) {
       print("Navigating to provider navbar");
-      homeScreen = NavBar_prov(provID: provID!);
+      homeScreen = NavBar_screen(parentID: parentID!, childID: childID!);
     } else {
       print("Navigating to role selection");
       homeScreen = const roleSelect();

@@ -36,7 +36,7 @@ class _RegisterParentsState extends State<RegisterParents> {
     final password = _passwordController.text.trim();
 
     try {
-      final url = Uri.parse('https://vaccine-laravel-main-otillt.laravel.cloud/api/parent');
+      final url = Uri.parse('https://vaccine-laravel-main-fi5xjq.laravel.cloud/api/parent');
       final response = await http.post(
         url,
         headers: {'Content-Type': 'application/json'},

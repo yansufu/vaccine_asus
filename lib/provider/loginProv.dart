@@ -21,66 +21,66 @@ class _LoginProvState extends State<LoginProv> {
   final TextEditingController _passwordController = TextEditingController();
 
   void _loginParent(String email, String password, BuildContext context) async {
-  if (_formKey.currentState!.validate()) {
+    if (_formKey.currentState!.validate()) {
 
-    final email = _emailController.text.trim();
-    final password = _passwordController.text.trim();
+      final email = _emailController.text.trim();
+      final password = _passwordController.text.trim();
 
-    try {
-      final url = Uri.parse('https://vaccine-laravel-main-otillt.laravel.cloud/api/loginProvider');
-      final response = await http.post(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'email': email,
-          'password': password,
-        }),
-      );
+      try {
+        final url = Uri.parse('https://vaccine-laravel-main-fi5xjq.laravel.cloud/api/loginProvider');
+        final response = await http.post(
+          url,
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode({
+            'email': email,
+            'password': password,
+          }),
+        );
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        final provID = data['provider_id']; 
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setInt('provID', provID);
+        if (response.statusCode == 200) {
+          final data = jsonDecode(response.body);
+          final provID = data['provider_id'];
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setInt('provID', provID);
 
-        Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => NavBar_prov(
-          provID: provID ?? 0,
-        )
-        ),
-      );
-      } else {
-        final error = jsonDecode(response.body);
-        showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: Text("Login Response"),
-            content: Text(response.body),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text("OK"),
-              )
-            ],
-          ),
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => NavBar_prov(
+              provID: provID ?? 0,
+            )
+            ),
+          );
+        } else {
+          final error = jsonDecode(response.body);
+          showDialog(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: Text("Login Response"),
+              content: Text(response.body),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text("OK"),
+                )
+              ],
+            ),
+          );
+        }
+
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Error: $e")),
         );
       }
-
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error: $e")),
-      );
     }
   }
-}
 
   Widget _buildInputField(
-    String hint,
-    TextEditingController controller, {
-    bool obscure = false,
-    TextInputType keyboardType = TextInputType.text,
-  }) {
+      String hint,
+      TextEditingController controller, {
+        bool obscure = false,
+        TextInputType keyboardType = TextInputType.text,
+      }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: TextFormField(
@@ -114,9 +114,11 @@ class _LoginProvState extends State<LoginProv> {
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
-
+    final screenWidth = MediaQuery.of(context).size.width;
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
+        backgroundColor: Colors.white,
         title: Row(
           children: [
             Container(
@@ -132,10 +134,15 @@ class _LoginProvState extends State<LoginProv> {
                   )
                 ],
               ),
-              child: const Icon(
-                Icons.arrow_back_ios_new_rounded,
-                size: 20,
-                color: Color(0xFFC28CA5),
+              child: GestureDetector(
+                onTap: () {
+                  Navigator.pop(context);
+                },
+                child: Icon(
+                  Icons.arrow_back_ios_new_rounded,
+                  size: 20,
+                  color: Color(0xFFC28CA5),
+                ),
               ),
             ),
             const SizedBox(width: 20),
@@ -153,6 +160,12 @@ class _LoginProvState extends State<LoginProv> {
       ),
       body: Container(
         padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage('assets/Images/bg_login.png'),
+            fit: BoxFit.cover,
+          ),
+        ),
         child: ListView(
           children: [
             Text(
@@ -182,29 +195,58 @@ class _LoginProvState extends State<LoginProv> {
                       final email = _emailController.text;
                       final password = _passwordController.text;
                       _loginParent(email, password, context);
-                    },
-                    child: Text("Login"),
+                    },style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFFFC0DA),
+                    padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                    child: Text("Login", style: TextStyle(color: Colors.white, fontSize: 16),),
                   ),
 
                 ],
               ),
             ),
-            GestureDetector(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => RegisterProv()),
-                );
-              },
-              child: Text(
-                "Don't have account? Register",
-                style: TextStyle(
-                  color: Colors.blue,
-                  decoration: TextDecoration.underline,
+            SizedBox(height: screenHeight * 0.255,),
+            Container(
+              height: screenHeight * 0.13,
+              width: screenWidth * 0.1,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                image: DecorationImage(
+                  image: AssetImage('assets/Images/provider_logo.png'),
+                  fit: BoxFit.contain,
                 ),
               ),
-            )
-
+            ),
+            SizedBox(height: screenHeight * 0.005,),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  "Don't have account? ",
+                  style: TextStyle(
+                    color: const Color.fromARGB(255, 83, 83, 83),
+                  ),
+                ),
+                GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => RegisterProv()),
+                    );
+                  },
+                  child: Text(
+                    " Register",
+                    style: TextStyle(
+                      color: const Color(0xFF35C2C1),
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ],
         ),
       ),

@@ -19,6 +19,7 @@ class _GenerateQRPageState extends State<GenerateQRPage> {
   List<int> periodOptions = [];
   List<Map<String, dynamic>> periodData = [];
 
+  int? selectedCategoryId;
   int? selectedVaccineId;
   String? selectedVaccineName;
   int? selectedPeriod;
@@ -33,11 +34,11 @@ class _GenerateQRPageState extends State<GenerateQRPage> {
   }
 
   Future<void> fetchProvData() async {
-    final url = Uri.parse('https://vaccine-laravel-main-otillt.laravel.cloud/api/provider/${widget.provID}');
+    final url = Uri.parse('https://vaccine-laravel-main-fi5xjq.laravel.cloud/api/provider/${widget.provID}');
     final response = await http.get(url);
 
     if (response.statusCode == 200) {
-      final data = jsonDecode(response.body); 
+      final data = jsonDecode(response.body);
 
       if (!mounted) return;
       setState(() {
@@ -46,14 +47,14 @@ class _GenerateQRPageState extends State<GenerateQRPage> {
       });
     } else {
       if (!mounted) return;
-      
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Failed to load profile data')),
       );
     }
   }
   Future<void> fetchVaccineCategories() async {
-    final response = await http.get(Uri.parse('https://vaccine-laravel-main-otillt.laravel.cloud/api/category'));
+    final response = await http.get(Uri.parse('https://vaccine-laravel-main-fi5xjq.laravel.cloud/api/category'));
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
@@ -69,7 +70,7 @@ class _GenerateQRPageState extends State<GenerateQRPage> {
   }
 
   Future<void> fetchPeriodsByCategory(int categoryId) async {
-    final response = await http.get(Uri.parse('https://vaccine-laravel-main-otillt.laravel.cloud/api/vaccineByCat/$categoryId'));
+    final response = await http.get(Uri.parse('https://vaccine-laravel-main-fi5xjq.laravel.cloud/api/vaccineByCat/$categoryId'));
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
@@ -129,6 +130,7 @@ class _GenerateQRPageState extends State<GenerateQRPage> {
         child: Stack(
           children: [
             AppBar(
+              automaticallyImplyLeading: false,
               elevation: 0,
               backgroundColor: Colors.transparent,
               flexibleSpace: Container(
@@ -147,13 +149,13 @@ class _GenerateQRPageState extends State<GenerateQRPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text(
-                          "Ibu Digi",
-                          style: TextStyle(
-                            fontSize: 20,
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontFamily: 'Serif',
-                          ),),
+                      "Ibu Digi",
+                      style: TextStyle(
+                        fontSize: 20,
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontFamily: 'Serif',
+                      ),),
                     const SizedBox(height: 12),
                     Row(
                       children: [
@@ -171,13 +173,13 @@ class _GenerateQRPageState extends State<GenerateQRPage> {
                     Row(children: [
                       SizedBox(width: 20,),
                       Text(
-                      provName ?? 'Loading...',
-                      style: TextStyle(
-                        fontSize: 18,
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
+                        provName ?? 'Loading...',
+                        style: TextStyle(
+                          fontSize: 18,
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
-                    ),
                     ],)
                   ],
                 ),
@@ -201,7 +203,7 @@ class _GenerateQRPageState extends State<GenerateQRPage> {
 
               // Vaccine Dropdown
               DropdownButtonFormField<int>(
-                value: selectedVaccineId,
+                value: selectedCategoryId,
                 items: vaccineOptions.map((vaccine) {
                   return DropdownMenuItem<int>(
                     value: vaccine['id'],
@@ -210,7 +212,7 @@ class _GenerateQRPageState extends State<GenerateQRPage> {
                 }).toList(),
                 onChanged: (value) {
                   setState(() {
-                    selectedVaccineId = value;
+                    selectedCategoryId = value;
                   });
 
                   fetchPeriodsByCategory(value!);
@@ -240,7 +242,12 @@ class _GenerateQRPageState extends State<GenerateQRPage> {
                 }).toList(),
                 onChanged: (value) {
                   setState(() {
-                    selectedPeriod = value;
+                    final matchedRecord = periodData.firstWhere(
+                          (item) => item['period'] == value,
+                      orElse: () => {},
+                    );
+                    selectedVaccineId = matchedRecord['id'];
+
                   });
                 },
                 decoration: InputDecoration(
@@ -281,12 +288,14 @@ class _GenerateQRPageState extends State<GenerateQRPage> {
                 child: ElevatedButton(
                   onPressed: () {
                     if (_formKey.currentState!.validate()) {
-                      if (selectedVaccineId != null) {
+                      if (selectedCategoryId != null) {
                         _showQRPopup(
                           selectedVaccineId!,
                           lotIdController.text.trim(),
                           widget.provID,
                         );
+                        print('Vaccine ID: $selectedVaccineId, Lot ID: ${lotIdController.text.trim()}, Provider ID: ${widget.provID}');
+
                       } else {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(content: Text('Please select a vaccine')),
@@ -303,8 +312,8 @@ class _GenerateQRPageState extends State<GenerateQRPage> {
                   child: const Text(
                     'Generate',
                     style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.white),
+                        fontSize: 16,
+                        color: Colors.white),
                   ),
                 ),
               )

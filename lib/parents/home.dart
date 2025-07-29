@@ -29,7 +29,7 @@ class _HomeParentState extends State<HomeParent> {
   }
 
   Future<void> fetchChildPeriod() async {
-  final response = await http.get(Uri.parse('https://vaccine-laravel-main-otillt.laravel.cloud/api/child/${widget.childID}/vaccinations/status'));
+  final response = await http.get(Uri.parse('https://vaccine-laravel-main-fi5xjq.laravel.cloud/api/child/${widget.childID}/vaccinations/status'));
   if (response.statusCode == 200) {
     final List<dynamic> data = jsonDecode(response.body);
 
@@ -41,7 +41,7 @@ class _HomeParentState extends State<HomeParent> {
 }
   
   Future<void> fetchChildStatus() async {
-  final response = await http.get(Uri.parse('https://vaccine-laravel-main-otillt.laravel.cloud/api/child/${widget.childID}/vaccinations'));
+  final response = await http.get(Uri.parse('https://vaccine-laravel-main-fi5xjq.laravel.cloud/api/child/${widget.childID}/vaccinations'));
   if (response.statusCode == 200) {
     final List<dynamic> data = jsonDecode(response.body);
 
@@ -52,7 +52,7 @@ class _HomeParentState extends State<HomeParent> {
 }
 
   Future<void> fetchChildData()async {
-    final response = await http.get(Uri.parse('https://vaccine-laravel-main-otillt.laravel.cloud/api/child/${widget.childID}'));
+    final response = await http.get(Uri.parse('https://vaccine-laravel-main-fi5xjq.laravel.cloud/api/child/${widget.childID}'));
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
       setState(() {
