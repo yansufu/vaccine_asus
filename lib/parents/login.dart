@@ -86,40 +86,45 @@ class _LoginParentsState extends State<LoginParents> {
   }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: TextFormField(
-        controller: controller,
-        obscureText: obscure,
-        keyboardType: keyboardType,
-        decoration: InputDecoration(
-          filled: true,
-          fillColor: const Color(0xFFE8ECF4),
-          hintText: hint,
-          hintStyle: const TextStyle(color: Colors.grey),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
-            borderSide: BorderSide(color: Colors.grey.shade300),
+      child: Stack(
+        children: [TextFormField(
+          controller: controller,
+          obscureText: obscure,
+          keyboardType: keyboardType,
+          decoration: InputDecoration(
+            filled: true,
+            fillColor: const Color(0xFFE8ECF4),
+            hintText: hint,
+            hintStyle: const TextStyle(color: Colors.grey),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: BorderSide(color: Colors.grey.shade300),
+            ),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
           ),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
+          validator: (value) {
+            if (value == null || value.trim().isEmpty) {
+              return 'Please enter $hint';
+            }
+            return null;
+          },
         ),
-        validator: (value) {
-          if (value == null || value.trim().isEmpty) {
-            return 'Please enter $hint';
-          }
-          return null;
-        },
-      ),
+        ],
+      )
     );
   }
 
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
-
+    final screenWidth = MediaQuery.of(context).size.width;
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
+        backgroundColor: Colors.white,
         title: Row(
           children: [
             Container(
@@ -135,10 +140,15 @@ class _LoginParentsState extends State<LoginParents> {
                   )
                 ],
               ),
-              child: const Icon(
-                Icons.arrow_back_ios_new_rounded,
-                size: 20,
-                color: Color(0xFFC28CA5),
+              child: GestureDetector(
+                onTap: () {
+                  Navigator.pop(context); 
+                },
+                child: Icon(
+                  Icons.arrow_back_ios_new_rounded,
+                  size: 20,
+                  color: Color(0xFFC28CA5),
+                ),
               ),
             ),
             const SizedBox(width: 20),
@@ -156,6 +166,12 @@ class _LoginParentsState extends State<LoginParents> {
       ),
       body: Container(
         padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage('assets/Images/bg_login.png'), 
+            fit: BoxFit.cover, 
+          ),
+        ),
         child: ListView(
           children: [
             Text(
@@ -186,28 +202,58 @@ class _LoginParentsState extends State<LoginParents> {
                       final password = _passwordController.text;
                       _loginParent(email, password, context);
                     },
-                    child: Text("Login"),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFFFC0DA),
+                      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: Text("Login", style: TextStyle(color: Colors.white, fontSize: 16),),
                   ),
 
                 ],
               ),
             ),
-            GestureDetector(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => RegisterParents()),
-                );
-              },
-              child: Text(
-                "Don't have account? Register",
-                style: TextStyle(
-                  color: Colors.blue,
-                  decoration: TextDecoration.underline,
-                ),
+            SizedBox(height: screenHeight * 0.255,),
+            Container(
+              height: screenHeight * 0.13,
+              width: screenWidth * 0.1,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+              image: DecorationImage(
+                image: AssetImage('assets/Images/parents_logo.png'), 
+                fit: BoxFit.contain, 
               ),
-            )
-
+            ),
+            ),
+            SizedBox(height: screenHeight * 0.005,),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                        "Don't have account? ",
+                        style: TextStyle(
+                          color: const Color.fromARGB(255, 83, 83, 83),
+                        ),
+                      ),
+                GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => RegisterParents()),
+                    );
+                  },
+                  child: Text(
+                        " Register",
+                        style: TextStyle(
+                          color: const Color(0xFF35C2C1),
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                ),
+              ],
+            ),
           ],
         ),
       ),

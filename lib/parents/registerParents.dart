@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'childForm.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'login.dart';
 
 
 class RegisterParents extends StatefulWidget {
@@ -110,9 +111,12 @@ class _RegisterParentsState extends State<RegisterParents> {
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
+    final screenWidth = MediaQuery.of(context).size.width;
 
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
+        backgroundColor: Colors.white,
         title: Row(
           children: [
             Container(
@@ -128,10 +132,15 @@ class _RegisterParentsState extends State<RegisterParents> {
                   )
                 ],
               ),
-              child: const Icon(
-                Icons.arrow_back_ios_new_rounded,
-                size: 20,
-                color: Color(0xFFC28CA5),
+              child: GestureDetector(
+                onTap: () {
+                  Navigator.pop(context); 
+                },
+                child: Icon(
+                  Icons.arrow_back_ios_new_rounded,
+                  size: 20,
+                  color: Color(0xFFC28CA5),
+                ),
               ),
             ),
             const SizedBox(width: 20),
@@ -149,6 +158,11 @@ class _RegisterParentsState extends State<RegisterParents> {
       ),
       body: Container(
         padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage("assets/Images/bg_register.png"),
+            fit: BoxFit.fill),
+        ),
         child: ListView(
           children: [
             Text(
@@ -187,11 +201,38 @@ class _RegisterParentsState extends State<RegisterParents> {
                     ),
                     child: const Text(
                       'Register',
-                      style: TextStyle(color: Colors.black, fontSize: 16),
+                      style: TextStyle(color: Colors.white, fontSize: 16),
                     ),
                   ),
                 ],
               ),
+            ),
+            SizedBox(height: screenHeight * 0.17,),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                        "Already have account? ",
+                        style: TextStyle(
+                          color: const Color.fromARGB(255, 83, 83, 83),
+                        ),
+                      ),
+                GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => LoginParents()),
+                    );
+                  },
+                  child: Text(
+                        " Login",
+                        style: TextStyle(
+                          color: const Color(0xFF35C2C1),
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                ),
+              ],
             ),
           ],
         ),
