@@ -21,6 +21,7 @@ class _ChildFormPageState extends State<ChildFormPage> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _childNameController = TextEditingController();
   final TextEditingController _dobController = TextEditingController();
+  final TextEditingController _NIKController = TextEditingController();
   final TextEditingController _weightController = TextEditingController();
   final TextEditingController _heightController = TextEditingController();
   TextEditingController _posyanduSearchController = TextEditingController();
@@ -31,7 +32,7 @@ class _ChildFormPageState extends State<ChildFormPage> {
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: TypeAheadField(
         suggestionsCallback: (pattern) async {
-          final response = await http.get(Uri.parse('https://vaccine-laravel-main-fi5xjq.laravel.cloud/api/organization'));
+          final response = await http.get(Uri.parse('http://10.0.2.2:8000/api/organization'));
 
           if (response.statusCode == 200) {
             final Map<String, dynamic> jsonResponse = json.decode(response.body);
@@ -74,6 +75,7 @@ class _ChildFormPageState extends State<ChildFormPage> {
     final childData = {
       "name": _childNameController.text.trim(),
       "date_of_birth": _dobController.text.trim(),
+      "NIK": _NIKController.text.trim(),
       "weight": double.tryParse(_weightController.text.trim()) ?? 0.0,
       "height": double.tryParse(_heightController.text.trim()) ?? 0.0,
       "medical_history": "none", 
@@ -82,7 +84,7 @@ class _ChildFormPageState extends State<ChildFormPage> {
     };
 
     final response = await http.post(
-      Uri.parse('https://vaccine-laravel-main-fi5xjq.laravel.cloud/api/parent/${widget.uid}/children'),
+      Uri.parse('http://10.0.2.2:8000/api/parent/${widget.uid}/children'),
       headers: {"Content-Type": "application/json"},
       body: jsonEncode(childData),
     );
@@ -112,6 +114,7 @@ class _ChildFormPageState extends State<ChildFormPage> {
 
       _childNameController.clear();
       _dobController.clear();
+      _NIKController.clear();
       _weightController.clear();
       _heightController.clear();
       _posyanduSearchController.clear();
@@ -215,6 +218,7 @@ class _ChildFormPageState extends State<ChildFormPage> {
                   _buildInputField("Child's Name", _childNameController),
                   _buildInputField("Date of Birth", _dobController,
                       readOnly: true, onTap: _selectDate),
+                  _buildInputField("Child's NIK", _NIKController),
                   _buildInputField("Weight (kg)", _weightController, keyboardType: TextInputType.number),
                   _buildInputField("Height (cm)", _heightController, keyboardType: TextInputType.number),
                   _buildOrganizationField(),

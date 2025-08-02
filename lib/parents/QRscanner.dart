@@ -120,7 +120,7 @@ class _QRScanPageState extends State<QRScanPage> {
     try {
       final data = json.decode(rawData);
       final response = await http.put(
-        Uri.parse('https://vaccine-laravel-main-fi5xjq.laravel.cloud/api/child/${widget.childID}/vaccinations/scan'),
+        Uri.parse('http://10.0.2.2:8000/api/child/${widget.childID}/vaccinations/scan'),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({
           'vaccine_id': data['vaccine_id'],

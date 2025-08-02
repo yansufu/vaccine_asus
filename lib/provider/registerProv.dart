@@ -29,7 +29,7 @@ class _RegisterProvState extends State<RegisterProv> {
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: TypeAheadField(
         suggestionsCallback: (pattern) async {
-          final response = await http.get(Uri.parse('https://vaccine-laravel-main-fi5xjq.laravel.cloud/api/organization'));
+          final response = await http.get(Uri.parse('http://10.0.2.2:8000/api/organization'));
 
           if (response.statusCode == 200) {
             final Map<String, dynamic> jsonResponse = json.decode(response.body);
@@ -80,7 +80,7 @@ class _RegisterProvState extends State<RegisterProv> {
       final org_id = _selectedOrgId ?? 1;
 
       try {
-        final url = Uri.parse('https://vaccine-laravel-main-fi5xjq.laravel.cloud/api/provider');
+        final url = Uri.parse('http://10.0.2.2:8000/api/provider');
         final response = await http.post(
           url,
           headers: {'Content-Type': 'application/json'},

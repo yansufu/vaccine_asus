@@ -25,6 +25,7 @@ class _ProfilePageState extends State<ProfilePage> {
   TextEditingController orgIdController = TextEditingController();
   int? _selectedOrgId;
 
+
   @override
   void initState() {
     super.initState();
@@ -36,7 +37,7 @@ class _ProfilePageState extends State<ProfilePage> {
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: TypeAheadField(
         suggestionsCallback: (pattern) async {
-          final response = await http.get(Uri.parse('https://vaccine-laravel-main-fi5xjq.laravel.cloud/api/organization'));
+          final response = await http.get(Uri.parse('http://10.0.2.2:8000/api/organization'));
 
           if (response.statusCode == 200) {
             final Map<String, dynamic> jsonResponse = json.decode(response.body);
@@ -73,7 +74,7 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Future<void> fetchProvData() async {
-    final url = Uri.parse('https://vaccine-laravel-main-fi5xjq.laravel.cloud/api/provider/${widget.provID}');
+    final url = Uri.parse('http://10.0.2.2:8000/api/provider/${widget.provID}');
     final response = await http.get(url);
 
     if (response.statusCode == 200) {
@@ -105,7 +106,7 @@ class _ProfilePageState extends State<ProfilePage> {
     print("Sending payload: $payload");
 
     final response = await http.put(
-      Uri.parse('https://vaccine-laravel-main-fi5xjq.laravel.cloud/api/provider/${widget.provID}'),
+      Uri.parse('http://10.0.2.2:8000/api/provider/${widget.provID}'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode(payload),
     );

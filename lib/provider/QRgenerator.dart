@@ -34,7 +34,7 @@ class _GenerateQRPageState extends State<GenerateQRPage> {
   }
 
   Future<void> fetchProvData() async {
-    final url = Uri.parse('https://vaccine-laravel-main-fi5xjq.laravel.cloud/api/provider/${widget.provID}');
+    final url = Uri.parse('http://10.0.2.2:8000/api/provider/${widget.provID}');
     final response = await http.get(url);
 
     if (response.statusCode == 200) {
@@ -54,7 +54,7 @@ class _GenerateQRPageState extends State<GenerateQRPage> {
     }
   }
   Future<void> fetchVaccineCategories() async {
-    final response = await http.get(Uri.parse('https://vaccine-laravel-main-fi5xjq.laravel.cloud/api/category'));
+    final response = await http.get(Uri.parse('http://10.0.2.2:8000/api/category'));
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
@@ -70,7 +70,7 @@ class _GenerateQRPageState extends State<GenerateQRPage> {
   }
 
   Future<void> fetchPeriodsByCategory(int categoryId) async {
-    final response = await http.get(Uri.parse('https://vaccine-laravel-main-fi5xjq.laravel.cloud/api/vaccineByCat/$categoryId'));
+    final response = await http.get(Uri.parse('http://10.0.2.2:8000/api/vaccineByCat/$categoryId'));
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);

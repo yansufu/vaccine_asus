@@ -27,7 +27,7 @@ class _LoginProvState extends State<LoginProv> {
       final password = _passwordController.text.trim();
 
       try {
-        final url = Uri.parse('https://vaccine-laravel-main-fi5xjq.laravel.cloud/api/loginProvider');
+        final url = Uri.parse('http://10.0.2.2:8000/api/loginProvider');
         final response = await http.post(
           url,
           headers: {'Content-Type': 'application/json'},

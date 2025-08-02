@@ -23,11 +23,14 @@ class _ProfilePageState extends State<ProfilePage> {
   bool isEditing = false;
   String? orgName;
   String? childName;
+  String? NIK;
+  String? selectedGender;
   DateTime? childDOB;
   double weight = 0.0;
   double height = 0.0;
 
   TextEditingController nameController = TextEditingController();
+  TextEditingController NIKController = TextEditingController();
   TextEditingController dobController = TextEditingController();
   TextEditingController weightController = TextEditingController();
   TextEditingController heightController = TextEditingController();
@@ -55,7 +58,7 @@ class _ProfilePageState extends State<ProfilePage> {
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: TypeAheadField(
         suggestionsCallback: (pattern) async {
-          final response = await http.get(Uri.parse('https://vaccine-laravel-main-fi5xjq.laravel.cloud/api/organization'));
+          final response = await http.get(Uri.parse('http://10.0.2.2:8000/api/organization'));
 
           if (response.statusCode == 200) {
             final Map<String, dynamic> jsonResponse = json.decode(response.body);
@@ -93,17 +96,20 @@ class _ProfilePageState extends State<ProfilePage> {
 
 
   Future<void> fetchChildData() async {
-  final url = Uri.parse('https://vaccine-laravel-main-fi5xjq.laravel.cloud/api/child/${widget.childID}');
+  final url = Uri.parse('http://10.0.2.2:8000/api/child/${widget.childID}');
   final response = await http.get(url);
 
   if (response.statusCode == 200) {
-    final data = jsonDecode(response.body); // NO ['data']
+    final data = jsonDecode(response.body);
 
     setState(() {
       nameController.text = data['name'];
       childName = data['name'];
       dobController.text = data['date_of_birth'];
       childDOB = DateTime.tryParse(data['date_of_birth']) ?? DateTime.now();
+      NIK = data['NIK'];
+      NIKController.text = data['NIK'] ?? '';
+      selectedGender = data['gender'];
       weightController.text = (data['weight'] ?? 0.0).toString();
       heightController.text = (data['height'] ?? 0.0).toString();
       medicalHistoryController.text = data['medical_history'];
@@ -122,6 +128,8 @@ class _ProfilePageState extends State<ProfilePage> {
     final payload = {
       'name': nameController.text,
       'date_of_birth': dobController.text.trim(),
+      'NIK': NIKController.text,
+      'gender': selectedGender,
       'weight': double.tryParse(weightController.text),
       'height': double.tryParse(heightController.text),
       'medical_history': medicalHistoryController.text,
@@ -131,8 +139,8 @@ class _ProfilePageState extends State<ProfilePage> {
     print("Sending payload: $payload");
 
     final response = await http.put(
-      Uri.parse('https://vaccine-laravel-main-fi5xjq.laravel.cloud/api/child/${widget.childID}'),
-      headers: {'Content-Type': 'application/json'},
+      Uri.parse('http://10.0.2.2:8000/api/child/${widget.childID}'),
+      headers: {'Content-Type': 'application/json', 'Accept': 'application/json',},
       body: jsonEncode(payload),
     );
 
@@ -173,7 +181,7 @@ class _ProfilePageState extends State<ProfilePage> {
   final parentId = prefs.getInt('parent_id');
 
   // Fetch children BY PARENT
-  final url = Uri.parse('https://vaccine-laravel-main-fi5xjq.laravel.cloud/api/childByParent/$parentId');
+  final url = Uri.parse('http://10.0.2.2:8000/api/childByParent/$parentId');
   final response = await http.get(url);
 
   if (response.statusCode == 200) {
@@ -297,6 +305,7 @@ class _ProfilePageState extends State<ProfilePage> {
             AppBar(
               elevation: 0,
               backgroundColor: Colors.transparent,
+              automaticallyImplyLeading: false,
               flexibleSpace: Container(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
@@ -401,6 +410,28 @@ class _ProfilePageState extends State<ProfilePage> {
               profileField('Name', nameController),
               profileField("Date of Birth", dobController,
                       readOnly: true, onTap: _selectDate),
+              profileField('NIK', NIKController),
+              DropdownButtonFormField<String>(
+                value: selectedGender,
+                onChanged: (String? newValue) {
+                  setState(() {
+                    selectedGender = newValue;
+                  });
+                },
+                decoration: InputDecoration(
+                  filled: true,
+                  fillColor: const Color(0xFFE8ECF4),
+                  labelText: "Gender",
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                ),
+                items: ['Female', 'Male'].map((String value) {
+                  return DropdownMenuItem<String>(
+                    value: value,
+                    child: Text(value),
+                  );
+                }).toList(),
+              ),
               profileField('Weight (Kg)', weightController, type: TextInputType.number),
               profileField('Height (cm)', heightController, type: TextInputType.number),
               profileField('Medical History', medicalHistoryController),
