@@ -13,16 +13,13 @@ class GenerateQRPage extends StatefulWidget {
 
 class _GenerateQRPageState extends State<GenerateQRPage> {
   final _formKey = GlobalKey<FormState>();
-  final TextEditingController lotIdController = TextEditingController();
 
   List<Map<String, dynamic>> vaccineOptions = [];
   List<int> periodOptions = [];
   List<Map<String, dynamic>> periodData = [];
+  List<VaccinationFormModel> formModels = [];
 
-  int? selectedCategoryId;
-  int? selectedVaccineId;
   String? selectedVaccineName;
-  int? selectedPeriod;
   String? orgName;
   String? provName;
 
@@ -31,6 +28,7 @@ class _GenerateQRPageState extends State<GenerateQRPage> {
     super.initState();
     fetchVaccineCategories();
     fetchProvData();
+    formModels.add(VaccinationFormModel());
   }
 
   Future<void> fetchProvData() async {
@@ -69,17 +67,18 @@ class _GenerateQRPageState extends State<GenerateQRPage> {
     }
   }
 
-  Future<void> fetchPeriodsByCategory(int categoryId) async {
+  Future<void> fetchPeriodsByCategory(int categoryId, int index) async {
     final response = await http.get(Uri.parse('http://10.0.2.2:8000/api/vaccineByCat/$categoryId'));
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
 
       setState(() {
-        periodData = List<Map<String, dynamic>>.from(data['data']);
-        periodOptions = periodData.map((item) => item['period'] as int).toList();
+        formModels[index].periodData = List<Map<String, dynamic>>.from(data['data']);
+        formModels[index].periodOptions = formModels[index].periodData.map((item) => item['period'] as int).toList();
 
-        selectedPeriod = null;
+        formModels[index].selectedPeriod = null;
+        formModels[index].selectedVaccineId = null;
       });
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -89,12 +88,13 @@ class _GenerateQRPageState extends State<GenerateQRPage> {
   }
 
 
-  void _showQRPopup(int vaccineId, String lotId, int provId) {
-    final data = {
-      "vaccine_id": vaccineId,
-      "lot_id": lotId,
-      "prov_id": provId.toString(),
-    };
+  void _showQRPopup() {
+    final List<Map<String, dynamic>> data = formModels.map((form) => {
+      "vaccine_id": form.selectedVaccineId,
+      "lot_id": form.lotIdController.text.trim(),
+      "prov_id": widget.provID.toString(),
+      "notes": form.notesController.text.trim(),
+    }).toList();
 
     final jsonStr = jsonEncode(data);
 
@@ -120,6 +120,8 @@ class _GenerateQRPageState extends State<GenerateQRPage> {
       ),
     );
   }
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -188,7 +190,8 @@ class _GenerateQRPageState extends State<GenerateQRPage> {
           ],
         ),
       ),
-      body: Padding(
+        body: SingleChildScrollView(
+          child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 30),
         child: Form(
           key: _formKey,
@@ -201,9 +204,17 @@ class _GenerateQRPageState extends State<GenerateQRPage> {
               ),
               const SizedBox(height: 30),
 
+            ...formModels.asMap().entries.map((entry) {
+              final index = entry.key;
+              final model = entry.value;
+
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+
               // Vaccine Dropdown
               DropdownButtonFormField<int>(
-                value: selectedCategoryId,
+                value: formModels[index].selectedCategoryId,
                 items: vaccineOptions.map((vaccine) {
                   return DropdownMenuItem<int>(
                     value: vaccine['id'],
@@ -212,10 +223,10 @@ class _GenerateQRPageState extends State<GenerateQRPage> {
                 }).toList(),
                 onChanged: (value) {
                   setState(() {
-                    selectedCategoryId = value;
+                    formModels[index].selectedCategoryId = value;
                   });
 
-                  fetchPeriodsByCategory(value!);
+                  fetchPeriodsByCategory(value!, index);
                 },
                 decoration: InputDecoration(
                   hintText: 'Vaccine name',
@@ -233,8 +244,8 @@ class _GenerateQRPageState extends State<GenerateQRPage> {
 
               // Period Dropdown
               DropdownButtonFormField<int>(
-                value: selectedPeriod,
-                items: periodOptions.map((period) {
+                value: formModels[index].selectedPeriod,
+                items: formModels[index].periodOptions.map((period) {
                   return DropdownMenuItem<int>(
                     value: period,
                     child: Text('Period $period'),
@@ -242,11 +253,16 @@ class _GenerateQRPageState extends State<GenerateQRPage> {
                 }).toList(),
                 onChanged: (value) {
                   setState(() {
-                    final matchedRecord = periodData.firstWhere(
+                    formModels[index].selectedPeriod = value;
+                    final matchedRecord = formModels[index].periodData.firstWhere(
                           (item) => item['period'] == value,
                       orElse: () => {},
                     );
-                    selectedVaccineId = matchedRecord['id'];
+                    if (matchedRecord != null) {
+                      formModels[index].selectedVaccineId = matchedRecord['id'];
+                    } else {
+                      formModels[index].selectedVaccineId = null;
+                    }
 
                   });
                 },
@@ -266,7 +282,7 @@ class _GenerateQRPageState extends State<GenerateQRPage> {
 
               // Lot ID Field
               TextFormField(
-                controller: lotIdController,
+                controller: model.lotIdController,
                 decoration: InputDecoration(
                   hintText: 'Lot ID',
                   filled: true,
@@ -278,9 +294,49 @@ class _GenerateQRPageState extends State<GenerateQRPage> {
                 ),
                 validator: (value) => value == null || value.isEmpty ? 'Enter Lot ID' : null,
               ),
+                  const SizedBox(height: 20),
 
-              const SizedBox(height: 40),
+              // Notes Field
+              TextFormField(
+                controller: model.notesController,
+                decoration: InputDecoration(
+                  hintText: 'Add notes (max 255)',
+                  filled: true,
+                  fillColor: const Color(0xFFF7F7F7),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+              ),
 
+                  const SizedBox(height: 30),
+                  Divider(),
+                ],
+              );
+            }),
+
+              // Add Forms Button
+            Center(
+              child: ElevatedButton.icon(
+                onPressed: () {
+                  setState(() {
+                    formModels.add(VaccinationFormModel());
+                  });
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.white, // Button background
+                  side: BorderSide(color: Color.fromARGB(255, 254, 171, 205), width: 2), // Border
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(50),
+                  ),),
+                icon: const Icon(Icons.add_circle_outline, color: Colors.black,),
+                label: const Text("Add Another Vaccination", style: TextStyle(color: Colors.black),),
+            ),),
+
+              SizedBox(
+                height: 40,
+              ),
               // Generate Button
               SizedBox(
                 width: double.infinity,
@@ -288,19 +344,29 @@ class _GenerateQRPageState extends State<GenerateQRPage> {
                 child: ElevatedButton(
                   onPressed: () {
                     if (_formKey.currentState!.validate()) {
-                      if (selectedCategoryId != null) {
-                        _showQRPopup(
-                          selectedVaccineId!,
-                          lotIdController.text.trim(),
-                          widget.provID,
-                        );
-                        print('Vaccine ID: $selectedVaccineId, Lot ID: ${lotIdController.text.trim()}, Provider ID: ${widget.provID}');
+                      final List<Map<String, dynamic>> payload = [];
 
-                      } else {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Please select a vaccine')),
-                        );
+                      for (final form in formModels) {
+                        if (form.selectedVaccineId != null &&
+                            form.lotIdController.text.trim().isNotEmpty) {
+                          payload.add({
+                            "vaccine_id": form.selectedVaccineId,
+                            "prov_id": widget.provID,
+                            "lot_id": form.lotIdController.text.trim(),
+                            "notes": form.notesController.text.trim(),
+                          });
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Please complete all form fields')),
+                          );
+                          return;
+                        }
                       }
+
+                      // If all forms are valid and collected, show the QR code
+                      _showQRPopup();
+
+                      print("Generated payload: $payload");
                     }
                   },
                   style: ElevatedButton.styleFrom(
@@ -321,6 +387,23 @@ class _GenerateQRPageState extends State<GenerateQRPage> {
           ),
         ),
       ),
+        ),
     );
   }
 }
+
+class VaccinationFormModel {
+  int? selectedCategoryId;
+  int? selectedPeriod;
+  int? selectedVaccineId;
+  List<Map<String, dynamic>> periodData = [];
+  List<int> periodOptions = [];
+
+  final TextEditingController lotIdController;
+  final TextEditingController notesController;
+
+  VaccinationFormModel()
+      : lotIdController = TextEditingController(),
+        notesController = TextEditingController();
+}
+

@@ -118,36 +118,41 @@ class _QRScanPageState extends State<QRScanPage> {
 
   Future<void> _handleQRData(String rawData) async {
     try {
-      final data = json.decode(rawData);
-      final response = await http.put(
-        Uri.parse('http://10.0.2.2:8000/api/child/${widget.childID}/vaccinations/scan'),
-        headers: {'Content-Type': 'application/json'},
-        body: json.encode({
-          'vaccine_id': data['vaccine_id'],
-          'lot_id': data['lot_id'],
-          'prov_id': data['prov_id'],
-        }),
-      );
-
-      if (response.statusCode == 200) {
-        _showDialog("Success", "Vaccination updated successfully!");
-        print("QR Data: $rawData");
-        print("Sending PUT to childID ${widget.childID}");
-        print("Decoded data: ${json.encode({
-          'vaccine_id': data['vaccine_id'],
-          'lot_id': data['lot_id'],
-          'prov_id': data['prov_id'],
-        })}");
-        print("Response status: ${response.statusCode}");
-        print("Response body: ${response.body}");
-
-      } else {
-        _showDialog("Error", "Failed to update vaccination.\n${response.body}");
+      final decoded = json.decode(rawData);
+      if (decoded is! List) {
+        _showDialog("Error", "Invalid QR format. Expected a list of vaccinations.");
+        return;
       }
+
+      List<String> failedMessages = [];
+
+      for (final entry in decoded) {
+        final response = await http.put(
+          Uri.parse('http://10.0.2.2:8000/api/child/${widget.childID}/vaccinations/scan'),
+          headers: {'Content-Type': 'application/json'},
+          body: json.encode({
+            'vaccine_id': entry['vaccine_id'],
+            'lot_id': entry['lot_id'],
+            'prov_id': entry['prov_id'],
+          }),
+        );
+
+        if (response.statusCode != 200) {
+          failedMessages.add("Vaccine ID ${entry['vaccine_id']}: ${response.body}");
+        }
+      }
+
+      if (failedMessages.isEmpty) {
+        _showDialog("Success", "All vaccinations updated successfully!");
+      } else {
+        _showDialog("Partial Success", "Some updates failed:\n\n${failedMessages.join('\n')}");
+      }
+
     } catch (e) {
-      _showDialog("Error", "Invalid QR data or network error: $e");
+      _showDialog("Error", "Invalid QR data or network error:\n$e");
     }
   }
+
 
   void _showDialog(String title, String message) {
     showDialog(

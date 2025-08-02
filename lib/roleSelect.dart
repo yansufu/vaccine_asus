@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:vaccine_app/parents/login.dart';
+import 'package:vaccine_app/provider/loginProv.dart';
 import 'parents/navbar.dart';
 //import 'provider/loginProv.dart';
 
@@ -126,7 +127,12 @@ class roleSelect extends StatelessWidget {
                   ),
                 ),
                 GestureDetector(
-                  // 
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const LoginProv()),
+                    );
+                  },
                 child: Column(
                     children: [
                       Container(

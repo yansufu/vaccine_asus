@@ -20,6 +20,8 @@ class _ProfilePageState extends State<ProfilePage> {
   bool isEditing = false;
   String? orgName;
   String? provName;
+  List<dynamic> vaccinationList = [];
+
 
   TextEditingController nameController = TextEditingController();
   TextEditingController orgIdController = TextEditingController();
@@ -30,6 +32,7 @@ class _ProfilePageState extends State<ProfilePage> {
   void initState() {
     super.initState();
     fetchProvData();
+    fetchProvHistory();
   }
 
   Widget _buildOrganizationField() {
@@ -87,7 +90,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
         nameController.text = data['name'];
         orgIdController.text = data['organization']['org_name'];
-        _selectedOrgId = data['organization']['id']; // optional: retain original ID
+        _selectedOrgId = data['organization']['id'];
       });
     } else {
       if (!mounted) return;
@@ -122,6 +125,24 @@ class _ProfilePageState extends State<ProfilePage> {
       );
     }
   }
+
+  Future<void> fetchProvHistory() async {
+    final response = await http.get(
+      Uri.parse('http://10.0.2.2:8000/api/provider/${widget.provID}/vaccinations'),
+    );
+
+    if (response.statusCode == 200) {
+      final List<dynamic> data = jsonDecode(response.body);
+
+      setState(() {
+        vaccinationList = data;
+      });
+
+    } else {
+      print('Failed to load vaccination history: ${response.body}');
+    }
+  }
+
 
   Future<void> _handleRefresh() async {
     await Future.wait([
@@ -290,6 +311,138 @@ class _ProfilePageState extends State<ProfilePage> {
               ),
               profileField('Name', nameController),
               _buildOrganizationField(),
+              
+              SizedBox(
+                height: 20,
+              ),
+
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text("Vaccination History", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                ],
+              ),
+              SizedBox(
+                height: 20,
+              ),
+
+              SingleChildScrollView(
+                child: Table(
+                  columnWidths: const {
+                    0: FlexColumnWidth(),
+                    1: FlexColumnWidth(),
+                  },
+                  border: TableBorder.all(
+                    color: Colors.grey.shade300,
+                    borderRadius: const BorderRadius.all(Radius.circular(10)),
+                  ),
+                  children: [
+                    // Table Header
+                    const TableRow(
+                      decoration: BoxDecoration(color: Color(0xFFFBF6F8)),
+                      children: [
+                        Padding(
+                          padding: EdgeInsets.all(8),
+                          child: Text('Child Name', style: TextStyle(fontWeight: FontWeight.bold)),
+                        ),
+                        Padding(
+                          padding: EdgeInsets.all(8),
+                          child: Text('Vaccine', style: TextStyle(fontWeight: FontWeight.bold)),
+                        ),
+                      ],
+                    ),
+
+                    // Table Rows from API data
+                    ...(vaccinationList).map((item) {
+                  final vaccineName = item['vaccine']?['name'] ?? 'Unknown';
+                  final bool isCompleted = item['is_completed'] == 1 || item['is_completed'] == true;
+                  final vaccinationDate = item['updated_at'] ?? 'Unknown';
+                  final providerNote = item['notes'] ?? 'No note';
+                  final lotId = item['lot_id'] ?? '-';
+                  final childName = item['child']?['name']?.toString() ?? '-';
+                  final location = item['provider']?['organization']?['org_name'] ?? 'Not specified';
+
+                  return TableRow(
+                    decoration: const BoxDecoration(color: Color(0xFFFDFDFD)),
+                    children: [
+                      TableCell(
+                        child: InkWell(
+                          onTap: () {
+                            showDialog(
+                              context: context,
+                              builder: (context) => AlertDialog(
+                                title: const Text('Vaccination Details'),
+                                content: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text('Vaccine Name: $vaccineName'),
+                                    Text('Status: ${isCompleted ? 'Completed' : 'Not Completed'}'),
+                                    Text('Lot ID: $lotId'),
+                                    Text('Name: $childName'),
+                                    Text('Location: $location'),
+                                    Text('Note: $providerNote'),
+                                    if (isCompleted) Text('Date: $vaccinationDate'),
+                                  ],
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(context),
+                                    child: const Text('Close'),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.all(8),
+                            child: Text(childName),
+                          ),
+                        ),
+                      ),
+                      TableCell(
+                        child: InkWell(
+                          onTap: () {
+                            showDialog(
+                              context: context,
+                              builder: (context) => AlertDialog(
+                                title: const Text('Vaccination Details'),
+                                content: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text('Vaccine Name: $vaccineName'),
+                                    Text('Status: ${isCompleted ? 'Completed' : 'Not Completed'}'),
+                                    Text('Lot ID: $lotId'),
+                                    Text('Name: $childName'),
+                                    Text('Location: $location'),
+                                    Text('Note: $providerNote'),
+                                    if (isCompleted) Text('Date: $vaccinationDate'),
+                                  ],
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(context),
+                                    child: const Text('Close'),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.all(8),
+                            child: Text(vaccineName),
+                          ),
+                        ),
+                      ),
+                    ],
+                  );
+                }).toList()
+
+
+                  ],
+                ),
+              ),
             ],
           ),
         ),
