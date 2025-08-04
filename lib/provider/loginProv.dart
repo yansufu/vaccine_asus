@@ -236,32 +236,32 @@ class _LoginProvState extends State<LoginProv> {
               ),
             ),
             SizedBox(height: screenHeight * 0.005,),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  "Don't have account? ",
-                  style: TextStyle(
-                    color: const Color.fromARGB(255, 83, 83, 83),
-                  ),
-                ),
-                GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => RegisterProv()),
-                    );
-                  },
-                  child: Text(
-                    " Register",
-                    style: TextStyle(
-                      color: const Color(0xFF35C2C1),
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ],
-            ),
+            // Row(
+            //   mainAxisAlignment: MainAxisAlignment.center,
+            //   children: [
+            //     Text(
+            //       "Don't have account? ",
+            //       style: TextStyle(
+            //         color: const Color.fromARGB(255, 83, 83, 83),
+            //       ),
+            //     ),
+            //     GestureDetector(
+            //       onTap: () {
+            //         Navigator.push(
+            //           context,
+            //           MaterialPageRoute(builder: (context) => RegisterProv()),
+            //         );
+            //       },
+            //       child: Text(
+            //         " Register",
+            //         style: TextStyle(
+            //           color: const Color(0xFF35C2C1),
+            //           fontWeight: FontWeight.bold,
+            //         ),
+            //       ),
+            //     ),
+            //   ],
+            // ),
           ],
         ),
       ),

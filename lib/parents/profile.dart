@@ -7,6 +7,7 @@ import 'navbar.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
 import "package:vaccine_app/roleSelect.dart";
+import 'childForm.dart';
 
 
 class ProfilePage extends StatefulWidget {
@@ -195,32 +196,54 @@ class _ProfilePageState extends State<ProfilePage> {
           title: Text('Select a Child'),
           content: SizedBox(
             width: double.maxFinite,
-            child: ListView.builder(
-              shrinkWrap: true,
-              itemCount: children.length,
-              itemBuilder: (context, index) {
-                final child = children[index];
-                return Card(
-                  child: ListTile(
-                    title: Text(child['name']),
-                    onTap: () async {
-                      await prefs.setInt('child_id', child['id']);
-                      Navigator.of(context).pop();
+            child: Column(
+              children: [
+                ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: children.length,
+                  itemBuilder: (context, index) {
+                    final child = children[index];
+                    return Card(
+                      child:
+                      ListTile(
+                        title: Text(child['name']),
+                        onTap: () async {
+                          await prefs.setInt('child_id', child['id']);
+                          Navigator.of(context).pop();
 
-                      Navigator.pushReplacement(
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => NavBar_screen(
+                                parentID: parentId.toString(),
+                                childID: child['id'],
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    );
+                  },
+                ),
+                ElevatedButton(
+                    onPressed: () {
+                      Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => NavBar_screen(
-                            parentID: parentId.toString(),
-                            childID: child['id'],
-                          ),
+                          builder: (context) => ChildFormPage(uid: parentId.toString()),
                         ),
                       );
                     },
-                  ),
-                );
-              },
-            ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.add_circle_outline),
+                        SizedBox(width: 2,),
+                        Text("Add Children")
+                      ],
+                    ))
+              ],
+            )
           ),
         );
       },
@@ -304,6 +327,7 @@ class _ProfilePageState extends State<ProfilePage> {
           children: [
             AppBar(
               elevation: 0,
+              automaticallyImplyLeading: false,
               backgroundColor: Colors.transparent,
               flexibleSpace: Container(
                 decoration: BoxDecoration(
