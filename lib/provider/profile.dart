@@ -40,7 +40,7 @@ class _ProfilePageState extends State<ProfilePage> {
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: TypeAheadField(
         suggestionsCallback: (pattern) async {
-          final response = await http.get(Uri.parse('http://10.0.2.2:8000/api/organization'));
+          final response = await http.get(Uri.parse('https://vaccine-integration-main-xxocnw.laravel.cloud/api/organization'));
 
           if (response.statusCode == 200) {
             final Map<String, dynamic> jsonResponse = json.decode(response.body);
@@ -77,7 +77,7 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Future<void> fetchProvData() async {
-    final url = Uri.parse('http://10.0.2.2:8000/api/provider/${widget.provID}');
+    final url = Uri.parse('https://vaccine-integration-main-xxocnw.laravel.cloud/api/provider/${widget.provID}');
     final response = await http.get(url);
 
     if (response.statusCode == 200) {
@@ -109,7 +109,7 @@ class _ProfilePageState extends State<ProfilePage> {
     print("Sending payload: $payload");
 
     final response = await http.put(
-      Uri.parse('http://10.0.2.2:8000/api/provider/${widget.provID}'),
+      Uri.parse('https://vaccine-integration-main-xxocnw.laravel.cloud/api/provider/${widget.provID}'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode(payload),
     );
@@ -128,7 +128,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
   Future<void> fetchProvHistory() async {
     final response = await http.get(
-      Uri.parse('http://10.0.2.2:8000/api/provider/${widget.provID}/vaccinations'),
+      Uri.parse('https://vaccine-integration-main-xxocnw.laravel.cloud/api/provider/${widget.provID}/vaccinations'),
     );
 
     if (response.statusCode == 200) {
@@ -206,7 +206,7 @@ class _ProfilePageState extends State<ProfilePage> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(105),
+        preferredSize: const Size.fromHeight(125),
         child: Stack(
           children: [
             AppBar(
@@ -355,6 +355,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     // Table Rows from API data
                     ...(vaccinationList).map((item) {
                   final vaccineName = item['vaccine']?['name'] ?? 'Unknown';
+                  final vaccinePeriod = item['vaccine']?['period'] ?? 'Unknown';
                   final bool isCompleted = item['is_completed'] == 1 || item['is_completed'] == true;
                   final vaccinationDate = item['updated_at'] ?? 'Unknown';
                   final providerNote = item['notes'] ?? 'No note';
@@ -377,6 +378,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text('Vaccine Name: $vaccineName'),
+                                    Text('Period: $vaccinePeriod months'),
                                     Text('Status: ${isCompleted ? 'Completed' : 'Not Completed'}'),
                                     Text('Lot ID: $lotId'),
                                     Text('Name: $childName'),
@@ -412,6 +414,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text('Vaccine Name: $vaccineName'),
+                                    Text('Period: $vaccinePeriod months'),
                                     Text('Status: ${isCompleted ? 'Completed' : 'Not Completed'}'),
                                     Text('Lot ID: $lotId'),
                                     Text('Name: $childName'),

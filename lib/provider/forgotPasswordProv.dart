@@ -1,78 +1,44 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:vaccine_app/provider/forgotPasswordProv.dart';
-import 'navbar.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'registerProv.dart';
 
-
-class LoginProv extends StatefulWidget {
-  const LoginProv({super.key});
+class ForgotPasswordProviders extends StatefulWidget {
+  const ForgotPasswordProviders({super.key});
 
   @override
-  State<LoginProv> createState() => _LoginProvState();
+  State<ForgotPasswordProviders> createState() => _ForgotPasswordProvidersState();
 }
 
-class _LoginProvState extends State<LoginProv> {
+class _ForgotPasswordProvidersState extends State<ForgotPasswordProviders> {
   final _formKey = GlobalKey<FormState>();
-
   final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
 
-  void _loginParent(String email, String password, BuildContext context) async {
-    if (_formKey.currentState!.validate()) {
+  void _forgotPasswordParent(String email) async {
+    final url = Uri.parse(
+        'https://vaccine-integration-main-xxocnw.laravel.cloud/api/forgot-password-prov');
+    try {
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'email': email}),
+      );
 
-      final email = _emailController.text.trim();
-      final password = _passwordController.text.trim();
-
-      try {
-        final url = Uri.parse('https://vaccine-integration-main-xxocnw.laravel.cloud/api/loginProvider');
-        final response = await http.post(
-          url,
-          headers: {'Content-Type': 'application/json'},
-          body: jsonEncode({
-            'email': email,
-            'password': password,
-          }),
-        );
-
-        if (response.statusCode == 200) {
-          final data = jsonDecode(response.body);
-          final provID = data['provider_id'];
-          final prefs = await SharedPreferences.getInstance();
-          await prefs.setInt('provID', provID);
-
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => NavBar_prov(
-              provID: provID ?? 0,
-            )
-            ),
-          );
-        } else {
-          final error = jsonDecode(response.body);
-          showDialog(
-            context: context,
-            builder: (context) => AlertDialog(
-              title: Text("Login Response"),
-              content: Text(response.body),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: Text("OK"),
-                )
-              ],
-            ),
-          );
-        }
-
-      } catch (e) {
+      if (response.statusCode == 200) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Error: $e")),
+          const SnackBar(content: Text("Reset link sent! Please check your email.")),
+        );
+      } else {
+        final data = jsonDecode(response.body);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(data['message'] ?? "Something went wrong")),
         );
       }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Failed to send reset email.")),
+      );
     }
   }
 
@@ -93,7 +59,8 @@ class _LoginProvState extends State<LoginProv> {
           fillColor: const Color(0xFFE8ECF4),
           hintText: hint,
           hintStyle: const TextStyle(color: Colors.grey),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          contentPadding:
+          const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
             borderSide: BorderSide(color: Colors.grey.shade300),
@@ -116,6 +83,7 @@ class _LoginProvState extends State<LoginProv> {
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
     final screenWidth = MediaQuery.of(context).size.width;
+
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
@@ -136,10 +104,8 @@ class _LoginProvState extends State<LoginProv> {
                 ],
               ),
               child: GestureDetector(
-                onTap: () {
-                  Navigator.pop(context);
-                },
-                child: Icon(
+                onTap: () => Navigator.pop(context),
+                child: const Icon(
                   Icons.arrow_back_ios_new_rounded,
                   size: 20,
                   color: Color(0xFFC28CA5),
@@ -161,7 +127,7 @@ class _LoginProvState extends State<LoginProv> {
       ),
       body: Container(
         padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           image: DecorationImage(
             image: AssetImage('assets/Images/bg_login.png'),
             fit: BoxFit.cover,
@@ -188,74 +154,65 @@ class _LoginProvState extends State<LoginProv> {
               key: _formKey,
               child: Column(
                 children: [
-                  _buildInputField("Email", _emailController),
-                  _buildInputField("Password", _passwordController, obscure: true),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      GestureDetector(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => const ForgotPasswordProviders()),
-                          );
-                        },
-                        child: Text("Forgot Password?"),
-                      ),
-                    ],
-                  ),
+                  _buildInputField("Email", _emailController,
+                      keyboardType: TextInputType.emailAddress),
                   const SizedBox(height: 20),
                   ElevatedButton(
                     onPressed: () {
-                      final email = _emailController.text;
-                      final password = _passwordController.text;
-                      _loginParent(email, password, context);
-                    },style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFFFC0DA),
-                    padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
+                      if (_formKey.currentState!.validate()) {
+                        _forgotPasswordParent(_emailController.text.trim());
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFFFC0DA),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 32, vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: const Text(
+                      "Send Reset Link",
+                      style: TextStyle(color: Colors.white, fontSize: 16),
                     ),
                   ),
-                    child: Text("Login", style: TextStyle(color: Colors.white, fontSize: 16),),
-                  ),
-
                 ],
               ),
             ),
-            SizedBox(height: screenHeight * 0.255,),
+            SizedBox(height: screenHeight * 0.31),
             Container(
               height: screenHeight * 0.13,
               width: screenWidth * 0.1,
               alignment: Alignment.center,
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 image: DecorationImage(
-                  image: AssetImage('assets/Images/provider_logo.png'),
+                  image: AssetImage('assets/Images/parents_logo.png'),
                   fit: BoxFit.contain,
                 ),
               ),
             ),
-            SizedBox(height: screenHeight * 0.005,),
+            SizedBox(height: screenHeight * 0.005),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(
-                  "Don't have account? ",
+                const Text(
+                  "Don't have an account? ",
                   style: TextStyle(
-                    color: const Color.fromARGB(255, 83, 83, 83),
+                    color: Color.fromARGB(255, 83, 83, 83),
                   ),
                 ),
                 GestureDetector(
                   onTap: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => RegisterProv()),
+                      MaterialPageRoute(
+                          builder: (context) => const RegisterProv()),
                     );
                   },
-                  child: Text(
+                  child: const Text(
                     " Register",
                     style: TextStyle(
-                      color: const Color(0xFF35C2C1),
+                      color: Color(0xFF35C2C1),
                       fontWeight: FontWeight.bold,
                     ),
                   ),

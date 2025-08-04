@@ -39,7 +39,7 @@ class _QRScanPageState extends State<QRScanPage> {
 
     return Scaffold(
             appBar: PreferredSize(
-        preferredSize: Size.fromHeight(50),
+        preferredSize: Size.fromHeight(60),
         child: Stack(
           children: [
             AppBar(
@@ -128,13 +128,9 @@ class _QRScanPageState extends State<QRScanPage> {
 
       for (final entry in decoded) {
         final response = await http.put(
-          Uri.parse('http://10.0.2.2:8000/api/child/${widget.childID}/vaccinations/scan'),
+          Uri.parse('https://vaccine-integration-main-xxocnw.laravel.cloud/api/child/${widget.childID}/vaccinations/scan'),
           headers: {'Content-Type': 'application/json'},
-          body: json.encode({
-            'vaccine_id': entry['vaccine_id'],
-            'lot_id': entry['lot_id'],
-            'prov_id': entry['prov_id'],
-          }),
+          body: json.encode(decoded),
         );
 
         if (response.statusCode != 200) {

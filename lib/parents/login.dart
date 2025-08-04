@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'registerParents.dart';
+import 'forgotPassword.dart';
 
 
 class LoginParents extends StatefulWidget {
@@ -27,7 +28,7 @@ class _LoginParentsState extends State<LoginParents> {
     final password = _passwordController.text.trim();
 
     try {
-      final url = Uri.parse('http://10.0.2.2:8000/api/login');
+      final url = Uri.parse('https://vaccine-integration-main-xxocnw.laravel.cloud/api/login');
       final response = await http.post(
         url,
         headers: {'Content-Type': 'application/json'},
@@ -195,6 +196,20 @@ class _LoginParentsState extends State<LoginParents> {
                 children: [
                   _buildInputField("Email", _emailController),
                   _buildInputField("Password", _passwordController, obscure: true),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => const ForgotPasswordParents()),
+                          );
+                        },
+                        child: Text("Forgot Password?"),
+                      ),
+                    ],
+                  ),
                   const SizedBox(height: 20),
                   ElevatedButton(
                     onPressed: () {
@@ -214,8 +229,9 @@ class _LoginParentsState extends State<LoginParents> {
 
                 ],
               ),
+
             ),
-            SizedBox(height: screenHeight * 0.255,),
+            SizedBox(height: screenHeight * 0.2,),
             Container(
               height: screenHeight * 0.13,
               width: screenWidth * 0.1,
@@ -239,8 +255,7 @@ class _LoginParentsState extends State<LoginParents> {
                       ),
                 GestureDetector(
                   onTap: () {
-                    Navigator.push(
-                      context,
+                    Navigator.push(context,
                       MaterialPageRoute(builder: (context) => RegisterParents()),
                     );
                   },

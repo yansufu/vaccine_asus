@@ -17,6 +17,7 @@ class _HomeParentState extends State<HomeParent> {
   List<dynamic> vaccinationNextPeriodList = [];
   List<dynamic> vaccinationList = [];
   String? orgName;
+  String? selectedGender;
   String? childName;
   DateTime? childDOB;
   Map<String, dynamic>? childData;
@@ -31,7 +32,7 @@ class _HomeParentState extends State<HomeParent> {
   }
 
   Future<void> fetchChildPeriod() async {
-  final response = await http.get(Uri.parse('http://10.0.2.2:8000/api/child/${widget.childID}/vaccinations/status'));
+  final response = await http.get(Uri.parse('https://vaccine-integration-main-xxocnw.laravel.cloud/api/child/${widget.childID}/vaccinations/status'));
   if (response.statusCode == 200) {
     final List<dynamic> data = jsonDecode(response.body);
 
@@ -43,7 +44,7 @@ class _HomeParentState extends State<HomeParent> {
 }
 
   Future<void> fetchNextPeriod() async {
-  final response = await http.get(Uri.parse('http://10.0.2.2:8000/api/child/${widget.childID}/vaccinations/nextStatus'));
+  final response = await http.get(Uri.parse('https://vaccine-integration-main-xxocnw.laravel.cloud/api/child/${widget.childID}/vaccinations/nextStatus'));
   if (response.statusCode == 200) {
     final List<dynamic> data = jsonDecode(response.body);
 
@@ -55,7 +56,7 @@ class _HomeParentState extends State<HomeParent> {
 }
   
   Future<void> fetchChildStatus() async {
-  final response = await http.get(Uri.parse('http://10.0.2.2:8000/api/child/${widget.childID}/vaccinations'));
+  final response = await http.get(Uri.parse('https://vaccine-integration-main-xxocnw.laravel.cloud/api/child/${widget.childID}/vaccinations'));
   if (response.statusCode == 200) {
     final List<dynamic> data = jsonDecode(response.body);
 
@@ -66,7 +67,7 @@ class _HomeParentState extends State<HomeParent> {
 }
 
   Future<void> fetchChildData()async {
-    final response = await http.get(Uri.parse('http://10.0.2.2:8000/api/child/${widget.childID}'));
+    final response = await http.get(Uri.parse('https://vaccine-integration-main-xxocnw.laravel.cloud/api/child/${widget.childID}'));
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
       setState(() {
@@ -86,13 +87,28 @@ class _HomeParentState extends State<HomeParent> {
 }
 
   //CALCULATE AGE
-  String calculateAge(DateTime childDOB) {
+  String calculateAge(DateTime dob) {
     final now = DateTime.now();
-    final age = now.difference(childDOB);
-    final months = (age.inDays / 30).floor();
-    final days = age.inDays % 30;
-    return "$months months, $days days";
+
+    int years = now.year - dob.year;
+    int months = now.month - dob.month;
+    int days = now.day - dob.day;
+
+    if (days < 0) {
+      months -= 1;
+      final prevMonth = DateTime(now.year, now.month, 0);
+      days += prevMonth.day;
+    }
+
+    if (months < 0) {
+      years -= 1;
+      months += 12;
+    }
+
+    final totalMonths = (years * 12) + months;
+    return "$totalMonths months, $days days";
   }
+
 
   //CALCULATE UPCOMING AGE
 
@@ -116,7 +132,7 @@ class _HomeParentState extends State<HomeParent> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(110),
+        preferredSize: const Size.fromHeight(131),
         child: Stack(
           children: [
             AppBar(
@@ -408,6 +424,7 @@ class _HomeParentState extends State<HomeParent> {
                               // Table Rows from API data
                               ...vaccinationList.map((item) {
                                 final vaccineName = item['vaccine']['name'] ?? 'Unknown';
+                                final vaccinePeriod = item['vaccine']['period'] ?? 'Unknown';
                                 final bool isCompleted = item['is_completed'] == 1 || item['is_completed'] == true;
                                 final vaccinationDate = item['updated_at'] ?? 'Unknown';
                                 final providerNote = item['note'] ?? 'No note';
@@ -430,9 +447,10 @@ class _HomeParentState extends State<HomeParent> {
                                                 crossAxisAlignment: CrossAxisAlignment.start,
                                                 children: [
                                                   Text('Vaccine Name: $vaccineName'),
+                                                  Text('Period: $vaccinePeriod months'),
                                                   Text('Status: ${isCompleted ? 'Completed' : 'Not Completed'}'),
                                                   Text('Lot ID: $lotId'),
-                                                  Text('Provider: $provider'),
+                                                  Text('Name: $childName'),
                                                   Text('Location: $location'),
                                                   Text('Note: $providerNote'),
                                                   if (isCompleted) Text('Date: $vaccinationDate'),
@@ -466,9 +484,10 @@ class _HomeParentState extends State<HomeParent> {
                                                 crossAxisAlignment: CrossAxisAlignment.start,
                                                 children: [
                                                   Text('Vaccine Name: $vaccineName'),
+                                                  Text('Period: $vaccinePeriod months'),
                                                   Text('Status: ${isCompleted ? 'Completed' : 'Not Completed'}'),
                                                   Text('Lot ID: $lotId'),
-                                                  Text('Provider: $provider'),
+                                                  Text('Name: $childName'),
                                                   Text('Location: $location'),
                                                   Text('Note: $providerNote'),
                                                   if (isCompleted) Text('Date: $vaccinationDate'),

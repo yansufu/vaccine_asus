@@ -26,13 +26,14 @@ class _ChildFormPageState extends State<ChildFormPage> {
   final TextEditingController _heightController = TextEditingController();
   TextEditingController _posyanduSearchController = TextEditingController();
   int? _selectedOrgId;
+  String? selectedGender;
 
   Widget _buildOrganizationField() {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: TypeAheadField(
         suggestionsCallback: (pattern) async {
-          final response = await http.get(Uri.parse('http://10.0.2.2:8000/api/organization'));
+          final response = await http.get(Uri.parse('https://vaccine-integration-main-xxocnw.laravel.cloud/api/organization'));
 
           if (response.statusCode == 200) {
             final Map<String, dynamic> jsonResponse = json.decode(response.body);
@@ -76,6 +77,7 @@ class _ChildFormPageState extends State<ChildFormPage> {
       "name": _childNameController.text.trim(),
       "date_of_birth": _dobController.text.trim(),
       "NIK": _NIKController.text.trim(),
+      "gender": selectedGender ?? "",
       "weight": double.tryParse(_weightController.text.trim()) ?? 0.0,
       "height": double.tryParse(_heightController.text.trim()) ?? 0.0,
       "medical_history": "none", 
@@ -84,7 +86,7 @@ class _ChildFormPageState extends State<ChildFormPage> {
     };
 
     final response = await http.post(
-      Uri.parse('http://10.0.2.2:8000/api/parent/${widget.uid}/children'),
+      Uri.parse('https://vaccine-integration-main-xxocnw.laravel.cloud/api/parent/${widget.uid}/children'),
       headers: {"Content-Type": "application/json"},
       body: jsonEncode(childData),
     );
@@ -218,6 +220,27 @@ class _ChildFormPageState extends State<ChildFormPage> {
                   _buildInputField("Child's Name", _childNameController),
                   _buildInputField("Date of Birth", _dobController,
                       readOnly: true, onTap: _selectDate),
+                  DropdownButtonFormField<String>(
+                    value: selectedGender,
+                    onChanged: (String? newValue) {
+                      setState(() {
+                        selectedGender = newValue;
+                      });
+                    },
+                    decoration: InputDecoration(
+                      filled: true,
+                      fillColor: const Color(0xFFE8ECF4),
+                      labelText: "Gender",
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                    ),
+                    items: ['Female', 'Male'].map((String value) {
+                      return DropdownMenuItem<String>(
+                        value: value,
+                        child: Text(value),
+                      );
+                    }).toList(),
+                  ),
                   _buildInputField("Child's NIK", _NIKController),
                   _buildInputField("Weight (kg)", _weightController, keyboardType: TextInputType.number),
                   _buildInputField("Height (cm)", _heightController, keyboardType: TextInputType.number),

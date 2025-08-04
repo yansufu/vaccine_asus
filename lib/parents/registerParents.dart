@@ -37,7 +37,7 @@ class _RegisterParentsState extends State<RegisterParents> {
     final password = _passwordController.text.trim();
 
     try {
-      final url = Uri.parse('http://10.0.2.2:8000/api/parent');
+      final url = Uri.parse('https://vaccine-integration-main-xxocnw.laravel.cloud/api/parent');
       final response = await http.post(
         url,
         headers: {'Content-Type': 'application/json'},
@@ -207,7 +207,7 @@ class _RegisterParentsState extends State<RegisterParents> {
                 ],
               ),
             ),
-            SizedBox(height: screenHeight * 0.17,),
+            SizedBox(height: screenHeight * 0.12,),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [

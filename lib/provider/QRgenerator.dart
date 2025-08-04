@@ -32,7 +32,7 @@ class _GenerateQRPageState extends State<GenerateQRPage> {
   }
 
   Future<void> fetchProvData() async {
-    final url = Uri.parse('http://10.0.2.2:8000/api/provider/${widget.provID}');
+    final url = Uri.parse('https://vaccine-integration-main-xxocnw.laravel.cloud/api/provider/${widget.provID}');
     final response = await http.get(url);
 
     if (response.statusCode == 200) {
@@ -52,7 +52,7 @@ class _GenerateQRPageState extends State<GenerateQRPage> {
     }
   }
   Future<void> fetchVaccineCategories() async {
-    final response = await http.get(Uri.parse('http://10.0.2.2:8000/api/category'));
+    final response = await http.get(Uri.parse('https://vaccine-integration-main-xxocnw.laravel.cloud/api/category'));
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
@@ -68,7 +68,7 @@ class _GenerateQRPageState extends State<GenerateQRPage> {
   }
 
   Future<void> fetchPeriodsByCategory(int categoryId, int index) async {
-    final response = await http.get(Uri.parse('http://10.0.2.2:8000/api/vaccineByCat/$categoryId'));
+    final response = await http.get(Uri.parse('https://vaccine-integration-main-xxocnw.laravel.cloud/api/vaccineByCat/$categoryId'));
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
@@ -128,7 +128,7 @@ class _GenerateQRPageState extends State<GenerateQRPage> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(105),
+        preferredSize: const Size.fromHeight(125),
         child: Stack(
           children: [
             AppBar(

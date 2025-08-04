@@ -58,7 +58,7 @@ class _ProfilePageState extends State<ProfilePage> {
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: TypeAheadField(
         suggestionsCallback: (pattern) async {
-          final response = await http.get(Uri.parse('http://10.0.2.2:8000/api/organization'));
+          final response = await http.get(Uri.parse('https://vaccine-integration-main-xxocnw.laravel.cloud/api/organization'));
 
           if (response.statusCode == 200) {
             final Map<String, dynamic> jsonResponse = json.decode(response.body);
@@ -96,7 +96,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
 
   Future<void> fetchChildData() async {
-  final url = Uri.parse('http://10.0.2.2:8000/api/child/${widget.childID}');
+  final url = Uri.parse('https://vaccine-integration-main-xxocnw.laravel.cloud/api/child/${widget.childID}');
   final response = await http.get(url);
 
   if (response.statusCode == 200) {
@@ -139,7 +139,7 @@ class _ProfilePageState extends State<ProfilePage> {
     print("Sending payload: $payload");
 
     final response = await http.put(
-      Uri.parse('http://10.0.2.2:8000/api/child/${widget.childID}'),
+      Uri.parse('https://vaccine-integration-main-xxocnw.laravel.cloud/api/child/${widget.childID}'),
       headers: {'Content-Type': 'application/json', 'Accept': 'application/json',},
       body: jsonEncode(payload),
     );
@@ -181,7 +181,7 @@ class _ProfilePageState extends State<ProfilePage> {
   final parentId = prefs.getInt('parent_id');
 
   // Fetch children BY PARENT
-  final url = Uri.parse('http://10.0.2.2:8000/api/childByParent/$parentId');
+  final url = Uri.parse('https://vaccine-integration-main-xxocnw.laravel.cloud/api/childByParent/$parentId');
   final response = await http.get(url);
 
   if (response.statusCode == 200) {
@@ -299,17 +299,17 @@ class _ProfilePageState extends State<ProfilePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(130),
+        preferredSize: const Size.fromHeight(131),
         child: Stack(
           children: [
             AppBar(
               elevation: 0,
               backgroundColor: Colors.transparent,
-              automaticallyImplyLeading: false,
               flexibleSpace: Container(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [Color.fromARGB(255, 254, 171, 205), Color.fromARGB(255, 254, 171, 205).withOpacity(0.6)],                    begin: Alignment.topLeft,
+                    colors: [Color.fromARGB(255, 254, 171, 205), Color.fromARGB(255, 254, 171, 205).withOpacity(0.6)],
+                    begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
                   borderRadius: const BorderRadius.vertical(
@@ -322,7 +322,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   children: [
                     const Text(
                       "Ibu Digi",
-                      style: TextStyle(color: Colors.white, fontSize: 18),
+                      style: TextStyle(color: Colors.white, fontSize: 18, fontFamily: 'Serif', fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 6),
                     Row(
@@ -337,19 +337,26 @@ class _ProfilePageState extends State<ProfilePage> {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      childName ?? 'Loading...',
-                      style: TextStyle(
-                        fontSize: 18,
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
+                    Row(
+                      children: [
+                        SizedBox(width: 20,),
+                        Text(
+                          childName ?? 'Loading...',
+                          style: TextStyle(
+                            fontSize: 18,
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                    Row(children: [
+                      SizedBox(width: 20,),
+                      Text(
+                        childDOB != null ? calculateAge(childDOB!) : 'Loading...',
+                        style: TextStyle(color: Colors.white70),
                       ),
-                    ),
-                    Text(
-                      childDOB != null ? calculateAge(childDOB!) : 'Loading...',
-                      style: TextStyle(color: Colors.white70),
-                    ),
+                    ],)
                   ],
                 ),
               ),
