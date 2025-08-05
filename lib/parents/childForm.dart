@@ -149,7 +149,10 @@ class _ChildFormPageState extends State<ChildFormPage> {
 
 
   Widget _buildInputField(String hint, TextEditingController controller,
-      {bool readOnly = false, VoidCallback? onTap, TextInputType keyboardType = TextInputType.text}) {
+      {bool readOnly = false,
+        VoidCallback? onTap,
+        TextInputType keyboardType = TextInputType.text,
+        bool isRequired = true,}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: TextFormField(
@@ -241,9 +244,9 @@ class _ChildFormPageState extends State<ChildFormPage> {
                       );
                     }).toList(),
                   ),
-                  _buildInputField("Child's NIK", _NIKController),
-                  _buildInputField("Weight (kg)", _weightController, keyboardType: TextInputType.number),
-                  _buildInputField("Height (cm)", _heightController, keyboardType: TextInputType.number),
+                  _buildInputField("NIK (fill with 0 if NIK is not available)", _NIKController, isRequired: false ),
+                  _buildInputField("Weight (kg)", _weightController, keyboardType: TextInputType.number, isRequired: false),
+                  _buildInputField("Height (cm)", _heightController, keyboardType: TextInputType.number, isRequired: false),
                   _buildOrganizationField(),
                   const SizedBox(height: 20),
                   ElevatedButton(

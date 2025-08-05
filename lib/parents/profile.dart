@@ -180,6 +180,7 @@ class _ProfilePageState extends State<ProfilePage> {
   void _switchChild(BuildContext context) async {
   final prefs = await SharedPreferences.getInstance();
   final parentId = prefs.getInt('parent_id');
+  print(parentId);
 
   // Fetch children BY PARENT
   final url = Uri.parse('https://vaccine-integration-main-xxocnw.laravel.cloud/api/childByParent/$parentId');

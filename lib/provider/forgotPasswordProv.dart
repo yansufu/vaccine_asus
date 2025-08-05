@@ -192,33 +192,33 @@ class _ForgotPasswordProvidersState extends State<ForgotPasswordProviders> {
               ),
             ),
             SizedBox(height: screenHeight * 0.005),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Text(
-                  "Don't have an account? ",
-                  style: TextStyle(
-                    color: Color.fromARGB(255, 83, 83, 83),
-                  ),
-                ),
-                GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => const RegisterProv()),
-                    );
-                  },
-                  child: const Text(
-                    " Register",
-                    style: TextStyle(
-                      color: Color(0xFF35C2C1),
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ],
-            ),
+            // Row(
+            //   mainAxisAlignment: MainAxisAlignment.center,
+            //   children: [
+            //     const Text(
+            //       "Don't have an account? ",
+            //       style: TextStyle(
+            //         color: Color.fromARGB(255, 83, 83, 83),
+            //       ),
+            //     ),
+            //     GestureDetector(
+            //       onTap: () {
+            //         Navigator.push(
+            //           context,
+            //           MaterialPageRoute(
+            //               builder: (context) => const RegisterProv()),
+            //         );
+            //       },
+            //       child: const Text(
+            //         " Register",
+            //         style: TextStyle(
+            //           color: Color(0xFF35C2C1),
+            //           fontWeight: FontWeight.bold,
+            //         ),
+            //       ),
+            //     ),
+            //   ],
+            // ),
           ],
         ),
       ),
