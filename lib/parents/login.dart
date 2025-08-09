@@ -18,22 +18,22 @@ class LoginParents extends StatefulWidget {
 class _LoginParentsState extends State<LoginParents> {
   final _formKey = GlobalKey<FormState>();
 
-  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _NIKController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
-  void _loginParent(String email, String password, BuildContext context) async {
+  void _loginParent(String NIK, String password, BuildContext context) async {
   if (_formKey.currentState!.validate()) {
 
-    final email = _emailController.text.trim();
+    final NIK = _NIKController.text.trim();
     final password = _passwordController.text.trim();
 
     try {
-      final url = Uri.parse('https://vaccine-integration-main-xxocnw.laravel.cloud/api/login');
+      final url = Uri.parse('http://10.0.2.2:8000/api/login');
       final response = await http.post(
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          'email': email,
+          'NIK': NIK,
           'password': password,
         }),
       );
@@ -194,7 +194,7 @@ class _LoginParentsState extends State<LoginParents> {
               key: _formKey,
               child: Column(
                 children: [
-                  _buildInputField("Email", _emailController),
+                  _buildInputField("NIK", _NIKController),
                   _buildInputField("Password", _passwordController, obscure: true),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,
@@ -213,9 +213,9 @@ class _LoginParentsState extends State<LoginParents> {
                   const SizedBox(height: 20),
                   ElevatedButton(
                     onPressed: () {
-                      final email = _emailController.text;
+                      final NIK = _NIKController.text;
                       final password = _passwordController.text;
-                      _loginParent(email, password, context);
+                      _loginParent(NIK, password, context);
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFFFFC0DA),

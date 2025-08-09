@@ -32,7 +32,7 @@ class _HomeParentState extends State<HomeParent> {
   }
 
   Future<void> fetchChildPeriod() async {
-  final response = await http.get(Uri.parse('https://vaccine-integration-main-xxocnw.laravel.cloud/api/child/${widget.childID}/vaccinations/status'));
+  final response = await http.get(Uri.parse('http://10.0.2.2:8000/api/child/${widget.childID}/vaccinations/status'));
   if (response.statusCode == 200) {
     final List<dynamic> data = jsonDecode(response.body);
 
@@ -44,7 +44,7 @@ class _HomeParentState extends State<HomeParent> {
 }
 
   Future<void> fetchNextPeriod() async {
-  final response = await http.get(Uri.parse('https://vaccine-integration-main-xxocnw.laravel.cloud/api/child/${widget.childID}/vaccinations/nextStatus'));
+  final response = await http.get(Uri.parse('http://10.0.2.2:8000/api/child/${widget.childID}/vaccinations/nextStatus'));
   if (response.statusCode == 200) {
     final List<dynamic> data = jsonDecode(response.body);
 
@@ -56,7 +56,7 @@ class _HomeParentState extends State<HomeParent> {
 }
   
   Future<void> fetchChildStatus() async {
-  final response = await http.get(Uri.parse('https://vaccine-integration-main-xxocnw.laravel.cloud/api/child/${widget.childID}/vaccinations'));
+  final response = await http.get(Uri.parse('http://10.0.2.2:8000/api/child/${widget.childID}/vaccinations'));
   if (response.statusCode == 200) {
     final List<dynamic> data = jsonDecode(response.body);
 
@@ -67,7 +67,7 @@ class _HomeParentState extends State<HomeParent> {
 }
 
   Future<void> fetchChildData()async {
-    final response = await http.get(Uri.parse('https://vaccine-integration-main-xxocnw.laravel.cloud/api/child/${widget.childID}'));
+    final response = await http.get(Uri.parse('http://10.0.2.2:8000/api/child/${widget.childID}'));
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
       setState(() {
@@ -427,7 +427,7 @@ class _HomeParentState extends State<HomeParent> {
                                 final vaccinePeriod = item['vaccine']['period'] ?? 'Unknown';
                                 final bool isCompleted = item['is_completed'] == 1 || item['is_completed'] == true;
                                 final vaccinationDate = item['updated_at'] ?? 'Unknown';
-                                final providerNote = item['note'] ?? 'No note';
+                                final providerNote = item['notes'] ?? 'No note';
                                 final lotId = item['lot_id'] ?? '-';
                                 final provider = item['provider']?['name']?.toString() ?? '-';
                                 final location = item['provider']?['organization']?['org_name'] ?? 'Not specified';
@@ -451,6 +451,7 @@ class _HomeParentState extends State<HomeParent> {
                                                   Text('Status: ${isCompleted ? 'Completed' : 'Not Completed'}'),
                                                   Text('Lot ID: $lotId'),
                                                   Text('Name: $childName'),
+                                                  Text("Provider's Name: $provider"),
                                                   Text('Location: $location'),
                                                   Text('Note: $providerNote'),
                                                   if (isCompleted) Text('Date: $vaccinationDate'),
@@ -467,7 +468,7 @@ class _HomeParentState extends State<HomeParent> {
                                         },
                                         child: Padding(
                                           padding: const EdgeInsets.all(8),
-                                          child: Text(vaccineName),
+                                          child: Text("$vaccineName period $vaccinePeriod"),
                                         ),
                                       ),
                                     ),
@@ -488,6 +489,7 @@ class _HomeParentState extends State<HomeParent> {
                                                   Text('Status: ${isCompleted ? 'Completed' : 'Not Completed'}'),
                                                   Text('Lot ID: $lotId'),
                                                   Text('Name: $childName'),
+                                                  Text("Provider's Name: $provider"),
                                                   Text('Location: $location'),
                                                   Text('Note: $providerNote'),
                                                   if (isCompleted) Text('Date: $vaccinationDate'),

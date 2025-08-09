@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'navbar.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class QRScanPage extends StatefulWidget {
   final String parentID;
@@ -27,6 +28,8 @@ class _QRScanPageState extends State<QRScanPage> {
   final MobileScannerController _cameraController = MobileScannerController();
   bool _hasScanned = false;
   String? qrText;
+  bool isProcessing = false;
+  List<Map<String, dynamic>> vaccineSubmissions = [];
 
   @override
   Widget build(BuildContext context) {
@@ -91,7 +94,7 @@ class _QRScanPageState extends State<QRScanPage> {
                   });
 
                   _cameraController.stop();
-                  await _handleQRData(qrText!);
+                  _handleQRData(qrText!);
 
                 },
               ),
@@ -116,38 +119,92 @@ class _QRScanPageState extends State<QRScanPage> {
     );
   }
 
-  Future<void> _handleQRData(String rawData) async {
+  void _handleQRData(String rawData) async {
     try {
-      final decoded = json.decode(rawData);
-      if (decoded is! List) {
+      final payload = json.decode(rawData);
+      if (payload is! List) {
         _showDialog("Error", "Invalid QR format. Expected a list of vaccinations.");
         return;
       }
 
-      List<String> failedMessages = [];
 
-      for (final entry in decoded) {
-        final response = await http.put(
-          Uri.parse('https://vaccine-integration-main-xxocnw.laravel.cloud/api/child/${widget.childID}/vaccinations/scan'),
-          headers: {'Content-Type': 'application/json'},
-          body: json.encode(decoded),
+    List<Map<String, dynamic>> vaccineSubmissions = [];
+
+      for (var vaccineData in payload) {
+        final category = vaccineData['vaccine_category'];
+        final provId = vaccineData['prov_id'];
+        final lotId = vaccineData['lot_id'];
+        final notes = vaccineData['notes'];
+        final eventId = vaccineData['event_id'];
+
+        // Get vaccine ID
+        final vaccineRes = await http.get(
+          Uri.parse('http://10.0.2.2:8000/api/getRecommendedVaccinePeriod/${widget.childID}/$category'),
         );
 
-        if (response.statusCode != 200) {
-          failedMessages.add("Vaccine ID ${entry['vaccine_id']}: ${response.body}");
+        final vaccineInfo = jsonDecode(vaccineRes.body);
+        final vaccineId = vaccineInfo['vaccine_id'];
+
+        if (vaccineId == null) {
+          print("Invalid vaccineInfo response: $vaccineInfo");
+          continue;
         }
+
+        vaccineSubmissions.add({
+          'vaccine_id': vaccineId,
+          'prov_id': provId,
+          'lot_id': lotId,
+          'notes': notes,
+          'event_id' : eventId,
+        });
       }
 
-      if (failedMessages.isEmpty) {
-        _showDialog("Success", "All vaccinations updated successfully!");
+      // Send everything at once
+      final postRes = await http.put(
+        Uri.parse('http://10.0.2.2:8000/api/child/${widget.childID}/vaccinations/scan'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(vaccineSubmissions),
+      );
+
+      if (postRes.statusCode != 200) {
+        print("Batch submit failed: ${postRes.body}");
       } else {
-        _showDialog("Partial Success", "Some updates failed:\n\n${failedMessages.join('\n')}");
+        print("Batch submit successful!");
+        _showDialog("Success", "Vaccination updated successfully!");
       }
 
     } catch (e) {
-      _showDialog("Error", "Invalid QR data or network error:\n$e");
+      print('Error: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error processing QR: $e')),
+      );
+    } finally {
+      setState(() {
+        isProcessing = false;
+      });
     }
   }
+
+
+  // Future<void> fetchPeriodsByCategory(int categoryId, int index) async {
+  //   final response = await http.get(Uri.parse('http://10.0.2.2:8000/api/vaccineByCat/$categoryId'));
+  //
+  //   if (response.statusCode == 200) {
+  //     final data = jsonDecode(response.body);
+  //
+  //     setState(() {
+  //       formModels[index].periodData = List<Map<String, dynamic>>.from(data['data']);
+  //       formModels[index].periodOptions = formModels[index].periodData.map((item) => item['period'] as int).toList();
+  //
+  //       formModels[index].selectedPeriod = null;
+  //       formModels[index].selectedVaccineId = null;
+  //     });
+  //   } else {
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       SnackBar(content: Text('Failed to load periods')),
+  //     );
+  //   }
+  // }
 
 
   void _showDialog(String title, String message) {

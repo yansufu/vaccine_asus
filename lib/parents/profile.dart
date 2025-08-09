@@ -59,7 +59,7 @@ class _ProfilePageState extends State<ProfilePage> {
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: TypeAheadField(
         suggestionsCallback: (pattern) async {
-          final response = await http.get(Uri.parse('https://vaccine-integration-main-xxocnw.laravel.cloud/api/organization'));
+          final response = await http.get(Uri.parse('http://10.0.2.2:8000/api/organization'));
 
           if (response.statusCode == 200) {
             final Map<String, dynamic> jsonResponse = json.decode(response.body);
@@ -97,7 +97,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
 
   Future<void> fetchChildData() async {
-  final url = Uri.parse('https://vaccine-integration-main-xxocnw.laravel.cloud/api/child/${widget.childID}');
+  final url = Uri.parse('http://10.0.2.2:8000/api/child/${widget.childID}');
   final response = await http.get(url);
 
   if (response.statusCode == 200) {
@@ -140,7 +140,7 @@ class _ProfilePageState extends State<ProfilePage> {
     print("Sending payload: $payload");
 
     final response = await http.put(
-      Uri.parse('https://vaccine-integration-main-xxocnw.laravel.cloud/api/child/${widget.childID}'),
+      Uri.parse('http://10.0.2.2:8000/api/child/${widget.childID}'),
       headers: {'Content-Type': 'application/json', 'Accept': 'application/json',},
       body: jsonEncode(payload),
     );
@@ -183,7 +183,7 @@ class _ProfilePageState extends State<ProfilePage> {
   print(parentId);
 
   // Fetch children BY PARENT
-  final url = Uri.parse('https://vaccine-integration-main-xxocnw.laravel.cloud/api/childByParent/$parentId');
+  final url = Uri.parse('http://10.0.2.2:8000/api/childByParent/$parentId');
   final response = await http.get(url);
 
   if (response.statusCode == 200) {

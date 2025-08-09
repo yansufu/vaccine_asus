@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:uuid/uuid.dart';
 
 class GenerateQRPage extends StatefulWidget {
   final int provID;
@@ -15,13 +16,14 @@ class _GenerateQRPageState extends State<GenerateQRPage> {
   final _formKey = GlobalKey<FormState>();
 
   List<Map<String, dynamic>> vaccineOptions = [];
-  List<int> periodOptions = [];
-  List<Map<String, dynamic>> periodData = [];
+  // List<int> periodOptions = [];
+  // List<Map<String, dynamic>> periodData = [];
   List<VaccinationFormModel> formModels = [];
 
   String? selectedVaccineName;
   String? orgName;
   String? provName;
+  bool is_event = false;
 
   @override
   void initState() {
@@ -32,7 +34,7 @@ class _GenerateQRPageState extends State<GenerateQRPage> {
   }
 
   Future<void> fetchProvData() async {
-    final url = Uri.parse('https://vaccine-integration-main-xxocnw.laravel.cloud/api/provider/${widget.provID}');
+    final url = Uri.parse('http://10.0.2.2:8000/api/provider/${widget.provID}');
     final response = await http.get(url);
 
     if (response.statusCode == 200) {
@@ -52,7 +54,7 @@ class _GenerateQRPageState extends State<GenerateQRPage> {
     }
   }
   Future<void> fetchVaccineCategories() async {
-    final response = await http.get(Uri.parse('https://vaccine-integration-main-xxocnw.laravel.cloud/api/category'));
+    final response = await http.get(Uri.parse('http://10.0.2.2:8000/api/category'));
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
@@ -67,34 +69,44 @@ class _GenerateQRPageState extends State<GenerateQRPage> {
     }
   }
 
-  Future<void> fetchPeriodsByCategory(int categoryId, int index) async {
-    final response = await http.get(Uri.parse('https://vaccine-integration-main-xxocnw.laravel.cloud/api/vaccineByCat/$categoryId'));
-
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-
-      setState(() {
-        formModels[index].periodData = List<Map<String, dynamic>>.from(data['data']);
-        formModels[index].periodOptions = formModels[index].periodData.map((item) => item['period'] as int).toList();
-
-        formModels[index].selectedPeriod = null;
-        formModels[index].selectedVaccineId = null;
-      });
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to load periods')),
-      );
-    }
-  }
+  // Future<void> fetchPeriodsByCategory(int categoryId, int index) async {
+  //   final response = await http.get(Uri.parse('http://10.0.2.2:8000/api/vaccineByCat/$categoryId'));
+  //
+  //   if (response.statusCode == 200) {
+  //     final data = jsonDecode(response.body);
+  //
+  //     setState(() {
+  //       formModels[index].periodData = List<Map<String, dynamic>>.from(data['data']);
+  //       formModels[index].periodOptions = formModels[index].periodData.map((item) => item['period'] as int).toList();
+  //
+  //       formModels[index].selectedPeriod = null;
+  //       formModels[index].selectedVaccineId = null;
+  //     });
+  //   } else {
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       SnackBar(content: Text('Failed to load periods')),
+  //     );
+  //   }
+  // }
 
 
   void _showQRPopup() {
+    final uuid = Uuid();
+    String? eventId;
+
+    if (is_event) {
+      eventId = uuid.v4();
+    }
+
     final List<Map<String, dynamic>> data = formModels.map((form) => {
-      "vaccine_id": form.selectedVaccineId,
+      "event_id": eventId,
+      "vaccine_category": form.selectedCategoryId,
       "lot_id": form.lotIdController.text.trim(),
       "prov_id": widget.provID.toString(),
       "notes": form.notesController.text.trim(),
     }).toList();
+
+    print("shown in the QR: $data");
 
     final jsonStr = jsonEncode(data);
 
@@ -203,6 +215,16 @@ class _GenerateQRPageState extends State<GenerateQRPage> {
                 style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 30),
+              Row(
+                children: [
+                  Text("Is an event?"),
+                  Checkbox(value: is_event, onChanged:
+                      (value) {
+                    setState(() {
+                      is_event = value ?? false;
+                    });}
+                  ),
+                ],),
 
             ...formModels.asMap().entries.map((entry) {
               final index = entry.key;
@@ -226,7 +248,7 @@ class _GenerateQRPageState extends State<GenerateQRPage> {
                     formModels[index].selectedCategoryId = value;
                   });
 
-                  fetchPeriodsByCategory(value!, index);
+                  //fetchPeriodsByCategory(value!, index);
                 },
                 decoration: InputDecoration(
                   hintText: 'Vaccine name',
@@ -243,42 +265,42 @@ class _GenerateQRPageState extends State<GenerateQRPage> {
               const SizedBox(height: 20),
 
               // Period Dropdown
-              DropdownButtonFormField<int>(
-                value: formModels[index].selectedPeriod,
-                items: formModels[index].periodOptions.map((period) {
-                  return DropdownMenuItem<int>(
-                    value: period,
-                    child: Text('Period $period'),
-                  );
-                }).toList(),
-                onChanged: (value) {
-                  setState(() {
-                    formModels[index].selectedPeriod = value;
-                    final matchedRecord = formModels[index].periodData.firstWhere(
-                          (item) => item['period'] == value,
-                      orElse: () => {},
-                    );
-                    if (matchedRecord != null) {
-                      formModels[index].selectedVaccineId = matchedRecord['id'];
-                    } else {
-                      formModels[index].selectedVaccineId = null;
-                    }
-
-                  });
-                },
-                decoration: InputDecoration(
-                  hintText: 'Select period',
-                  filled: true,
-                  fillColor: const Color(0xFFF7F7F7),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: BorderSide.none,
-                  ),
-                ),
-                validator: (value) => value == null ? 'Please select a period' : null,
-              ),
-
-              const SizedBox(height: 20),
+              // DropdownButtonFormField<int>(
+              //   value: formModels[index].selectedPeriod,
+              //   items: formModels[index].periodOptions.map((period) {
+              //     return DropdownMenuItem<int>(
+              //       value: period,
+              //       child: Text('Period $period'),
+              //     );
+              //   }).toList(),
+              //   onChanged: (value) {
+              //     setState(() {
+              //       formModels[index].selectedPeriod = value;
+              //       final matchedRecord = formModels[index].periodData.firstWhere(
+              //             (item) => item['period'] == value,
+              //         orElse: () => {},
+              //       );
+              //       if (matchedRecord != null) {
+              //         formModels[index].selectedVaccineId = matchedRecord['id'];
+              //       } else {
+              //         formModels[index].selectedVaccineId = null;
+              //       }
+              //
+              //     });
+              //   },
+              //   decoration: InputDecoration(
+              //     hintText: 'Select period',
+              //     filled: true,
+              //     fillColor: const Color(0xFFF7F7F7),
+              //     border: OutlineInputBorder(
+              //       borderRadius: BorderRadius.circular(10),
+              //       borderSide: BorderSide.none,
+              //     ),
+              //   ),
+              //   validator: (value) => value == null ? 'Please select a period' : null,
+              // ),
+              //
+              // const SizedBox(height: 20),
 
               // Lot ID Field
               TextFormField(
@@ -347,10 +369,11 @@ class _GenerateQRPageState extends State<GenerateQRPage> {
                       final List<Map<String, dynamic>> payload = [];
 
                       for (final form in formModels) {
-                        if (form.selectedVaccineId != null &&
+                        if (form.selectedCategoryId != null &&
                             form.lotIdController.text.trim().isNotEmpty) {
                           payload.add({
-                            "vaccine_id": form.selectedVaccineId,
+                            "event_id": is_event,
+                            "vaccine_category": form.selectedCategoryId,
                             "prov_id": widget.provID,
                             "lot_id": form.lotIdController.text.trim(),
                             "notes": form.notesController.text.trim(),
@@ -363,7 +386,6 @@ class _GenerateQRPageState extends State<GenerateQRPage> {
                         }
                       }
 
-                      // If all forms are valid and collected, show the QR code
                       _showQRPopup();
 
                       print("Generated payload: $payload");

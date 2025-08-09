@@ -18,7 +18,7 @@ class _RegisterParentsState extends State<RegisterParents> {
 
   final TextEditingController _parentNameController = TextEditingController();
   final TextEditingController _nikController = TextEditingController();
-  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController = TextEditingController();
 
@@ -33,18 +33,18 @@ class _RegisterParentsState extends State<RegisterParents> {
 
     final parentName = _parentNameController.text.trim();
     final nik = _nikController.text.trim();
-    final email = _emailController.text.trim();
+    final phone = _phoneController.text.trim();
     final password = _passwordController.text.trim();
 
     try {
-      final url = Uri.parse('https://vaccine-integration-main-xxocnw.laravel.cloud/api/parent');
+      final url = Uri.parse('http://10.0.2.2:8000/api/parent');
       final response = await http.post(
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'name': parentName,
           'NIK': nik,
-          'email': email,
+          'phone': phone,
           'password': password,
         }),
       );
@@ -186,7 +186,7 @@ class _RegisterParentsState extends State<RegisterParents> {
                 children: [
                   _buildInputField("Parent's Name", _parentNameController),
                   _buildInputField("NIK", _nikController, keyboardType: TextInputType.number),
-                  _buildInputField("Email", _emailController, keyboardType: TextInputType.emailAddress),
+                  _buildInputField("Phone", _phoneController, keyboardType: TextInputType.phone),
                   _buildInputField("Password", _passwordController, obscure: true),
                   _buildInputField("Confirm Password", _confirmPasswordController, obscure: true),
                   const SizedBox(height: 20),

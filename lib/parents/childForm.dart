@@ -33,7 +33,7 @@ class _ChildFormPageState extends State<ChildFormPage> {
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: TypeAheadField(
         suggestionsCallback: (pattern) async {
-          final response = await http.get(Uri.parse('https://vaccine-integration-main-xxocnw.laravel.cloud/api/organization'));
+          final response = await http.get(Uri.parse('http://10.0.2.2:8000/api/organization'));
 
           if (response.statusCode == 200) {
             final Map<String, dynamic> jsonResponse = json.decode(response.body);
@@ -86,7 +86,7 @@ class _ChildFormPageState extends State<ChildFormPage> {
     };
 
     final response = await http.post(
-      Uri.parse('https://vaccine-integration-main-xxocnw.laravel.cloud/api/parent/${widget.uid}/children'),
+      Uri.parse('http://10.0.2.2:8000/api/parent/${widget.uid}/children'),
       headers: {"Content-Type": "application/json"},
       body: jsonEncode(childData),
     );
@@ -175,7 +175,7 @@ class _ChildFormPageState extends State<ChildFormPage> {
           ),
         ),
         validator: (value) {
-          if (value == null || value.trim().isEmpty) {
+          if (isRequired && (value == null || value.trim().isEmpty)) {
             return 'Please enter $hint';
           }
           return null;

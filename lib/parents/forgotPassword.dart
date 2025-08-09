@@ -17,7 +17,7 @@ class _ForgotPasswordParentsState extends State<ForgotPasswordParents> {
 
   void _forgotPasswordParent(String email) async {
     final url = Uri.parse(
-        'https://vaccine-integration-main-xxocnw.laravel.cloud/api/forgot-password');
+        'http://10.0.2.2:8000/api/forgot-password');
     try {
       final response = await http.post(
         url,
