@@ -2,14 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'loginProv.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:vaccine_app/roleSelect.dart';
-
+// import React from "react";
+// import * as XLSX from "xlsx";
 
 class ProfilePage extends StatefulWidget {
   final int provID;
-
   const ProfilePage({super.key, required this.provID});
 
   @override
@@ -21,11 +20,17 @@ class _ProfilePageState extends State<ProfilePage> {
   String? orgName;
   String? provName;
   List<dynamic> vaccinationList = [];
-
+  Map<String?, List<Map<String, dynamic>>> groupedVaccinations = {};
+  List<bool> isExpandedList = [];
+  List<bool> isExpandedEventList = [];
+  List<Map<String, dynamic>> noEventVaccinations = [];
+  List<String> eventIds = [];
 
   TextEditingController nameController = TextEditingController();
   TextEditingController orgIdController = TextEditingController();
   int? _selectedOrgId;
+
+  final List<Map<String, dynamic>> noEventId = [];
 
 
   @override
@@ -134,8 +139,26 @@ class _ProfilePageState extends State<ProfilePage> {
     if (response.statusCode == 200) {
       final List<dynamic> data = jsonDecode(response.body);
 
+      final Map<String?, List<Map<String, dynamic>>> grouped = {};
+      for (var item in data) {
+        final eventId = item['event_id'];
+
+        if (eventId != null) {
+          final key = eventId.toString();
+          grouped.putIfAbsent(key, () => []);
+          grouped[key]!.add(item as Map<String, dynamic>);
+        } else {
+          noEventId.add(item as Map<String, dynamic>);
+        }
+      }
+
       setState(() {
         vaccinationList = data;
+        groupedVaccinations = grouped;
+        eventIds = groupedVaccinations.keys.cast<String>().toList();
+        isExpandedList = List.generate(groupedVaccinations.length, (_) => false);
+        noEventVaccinations = noEventId;
+        isExpandedEventList = List.generate(eventIds.length, (_) => false);
       });
 
     } else {
@@ -203,6 +226,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
   @override
   Widget build(BuildContext context) {
+    final eventIds = groupedVaccinations.keys.toList();
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: PreferredSize(
@@ -288,11 +312,10 @@ class _ProfilePageState extends State<ProfilePage> {
           ],
         ),
       ),
-      body: RefreshIndicator(
-        onRefresh: _handleRefresh,
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Column(
+        body: RefreshIndicator(
+          onRefresh: _handleRefresh,
+          child: ListView(
+            padding: const EdgeInsets.all(16),
             children: [
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -311,145 +334,136 @@ class _ProfilePageState extends State<ProfilePage> {
               ),
               profileField('Name', nameController),
               _buildOrganizationField(),
-              
-              SizedBox(
-                height: 20,
-              ),
+              const SizedBox(height: 20),
 
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              const Row(
+                mainAxisAlignment: MainAxisAlignment.start,
                 children: [
-                  const Text("Vaccination History", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                  Text(
+                    "Vaccination History",
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                  ),
                 ],
               ),
-              SizedBox(
-                height: 20,
-              ),
+              const SizedBox(height: 20),
 
-              SingleChildScrollView(
-                child: Table(
-                  columnWidths: const {
-                    0: FlexColumnWidth(),
-                    1: FlexColumnWidth(),
-                  },
-                  border: TableBorder.all(
-                    color: Colors.grey.shade300,
-                    borderRadius: const BorderRadius.all(Radius.circular(10)),
-                  ),
-                  children: [
-                    // Table Header
-                    const TableRow(
-                      decoration: BoxDecoration(color: Color(0xFFFBF6F8)),
-                      children: [
-                        Padding(
-                          padding: EdgeInsets.all(8),
-                          child: Text('Child Name', style: TextStyle(fontWeight: FontWeight.bold)),
-                        ),
-                        Padding(
-                          padding: EdgeInsets.all(8),
-                          child: Text('Vaccine', style: TextStyle(fontWeight: FontWeight.bold)),
-                        ),
-                      ],
-                    ),
-
-                    // Table Rows from API data
-                    ...(vaccinationList).map((item) {
-                  final vaccineName = item['vaccine']?['name'] ?? 'Unknown';
-                  final vaccinePeriod = item['vaccine']?['period'] ?? 'Unknown';
-                  final bool isCompleted = item['is_completed'] == 1 || item['is_completed'] == true;
-                  final vaccinationDate = item['updated_at'] ?? 'Unknown';
-                  final providerNote = item['notes'] ?? 'No note';
-                  final lotId = item['lot_id'] ?? '-';
-                  final childName = item['child']?['name']?.toString() ?? '-';
-                  final location = item['provider']?['organization']?['org_name'] ?? 'Not specified';
-
-                  return TableRow(
-                    decoration: const BoxDecoration(color: Color(0xFFFDFDFD)),
-                    children: [
-                      TableCell(
-                        child: InkWell(
-                          onTap: () {
-                            showDialog(
-                              context: context,
-                              builder: (context) => AlertDialog(
-                                title: const Text('Vaccination Details'),
-                                content: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text('Vaccine Name: $vaccineName'),
-                                    Text('Period: $vaccinePeriod months'),
-                                    Text('Status: ${isCompleted ? 'Completed' : 'Not Completed'}'),
-                                    Text('Lot ID: $lotId'),
-                                    Text('Name: $childName'),
-                                    Text('Location: $location'),
-                                    Text('Note: $providerNote'),
-                                    if (isCompleted) Text('Date: $vaccinationDate'),
-                                  ],
-                                ),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () => Navigator.pop(context),
-                                    child: const Text('Close'),
-                                  ),
-                                ],
-                              ),
-                            );
-                          },
-                          child: Padding(
-                            padding: const EdgeInsets.all(8),
-                            child: Text(childName),
-                          ),
-                        ),
-                      ),
-                      TableCell(
-                        child: InkWell(
-                          onTap: () {
-                            showDialog(
-                              context: context,
-                              builder: (context) => AlertDialog(
-                                title: const Text('Vaccination Details'),
-                                content: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text('Vaccine Name: $vaccineName'),
-                                    Text('Period: $vaccinePeriod months'),
-                                    Text('Status: ${isCompleted ? 'Completed' : 'Not Completed'}'),
-                                    Text('Lot ID: $lotId'),
-                                    Text('Name: $childName'),
-                                    Text('Location: $location'),
-                                    Text('Note: $providerNote'),
-                                    if (isCompleted) Text('Date: $vaccinationDate'),
-                                  ],
-                                ),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () => Navigator.pop(context),
-                                    child: const Text('Close'),
-                                  ),
-                                ],
-                              ),
-                            );
-                          },
-                          child: Padding(
-                            padding: const EdgeInsets.all(8),
-                            child: Text(vaccineName),
-                          ),
-                        ),
-                      ),
-                    ],
+          ExpansionPanelList(
+            expansionCallback: (int index, bool isExpanded) {
+              setState(() {
+                if (isExpandedList.length != 1) {
+                  isExpandedList = [false];
+                }
+                isExpandedList[index] = !isExpandedList[index];
+              });
+            },
+            children: [
+              ExpansionPanel(
+                headerBuilder: (context, isExpanded) {
+                  return const ListTile(
+                    title: Text("See All Vaccinations"),
                   );
-                }).toList()
-
-
-                  ],
+                },
+                body: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: DataTable(
+                    columns: const [
+                      DataColumn(label: Text('Vaccine')),
+                      DataColumn(label: Text('Lot ID')),
+                      DataColumn(label: Text('Completed')),
+                      DataColumn(label: Text('Date')),
+                      DataColumn(label: Text('Notes')),
+                    ],
+                    rows: vaccinationList.map((item) {
+                      final completed = item['is_completed'] == true || item['is_completed'] == 1;
+                      return DataRow(
+                        cells: [
+                          DataCell(Text(item['vaccine']?['name'] ?? '-')),
+                          DataCell(Text(item['lot_id'] ?? '-')),
+                          DataCell(Text(completed ? 'Yes' : 'No')),
+                          DataCell(Text(item['created_at'] ?? '-')),
+                          DataCell(Text(item['notes'] ?? '-')),
+                        ],
+                      );
+                    }).toList(),
+                  ),
                 ),
+                isExpanded: isExpandedList.isNotEmpty ? isExpandedList[0] : false,
               ),
             ],
           ),
+
+          // Event History
+              const SizedBox(height: 20),
+              const Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      Text(
+                        "Event History",
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+
+                  ExpansionPanelList(
+                    expansionCallback: (int index, bool isExpanded) {
+                      setState(() {
+                        if (isExpandedEventList.length != eventIds.length) {
+                          isExpandedEventList = List.generate(
+                            eventIds.length,
+                                (i) => i < isExpandedEventList.length ? isExpandedEventList[i] : false,
+                          );
+                        }
+                        isExpandedEventList[index] = !isExpandedEventList[index];
+                      });
+                    },
+                    children: eventIds.asMap().entries.map<ExpansionPanel>((entry) {
+                      final index = entry.key;
+                      final eventId = entry.value;
+                      final items = groupedVaccinations[eventId] ?? [];
+
+                      final vaccineNames = items.map((e) => e['vaccine']?['name'] ?? '').toSet().join(', ');
+                      final dates = items
+                          .map((e) => (e['updated_at'] as String).split('T').first).toSet();
+
+                      return ExpansionPanel(
+                        headerBuilder: (context, isExpanded) {
+                          return ListTile(
+                            title: Text(vaccineNames.isNotEmpty ? vaccineNames : 'No vaccine name'),
+                            subtitle: Text("$dates"),
+                          );
+                        },
+                        body: SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: DataTable(
+                            columns: const [
+                              DataColumn(label: Text('Vaccine')),
+                              DataColumn(label: Text('Lot ID')),
+                              DataColumn(label: Text('Completed')),
+                              DataColumn(label: Text('Date')),
+                              DataColumn(label: Text('Notes')),
+                            ],
+                            rows: items.map((item) {
+                              final completed = item['is_completed'] == true || item['is_completed'] == 1;
+                              return DataRow(cells: [
+                                DataCell(Text(item['vaccine']?['name'] ?? '-')),
+                                DataCell(Text(item['lot_id'] ?? '-')),
+                                DataCell(Text(completed ? 'Yes' : 'No')),
+                                DataCell(Text(item['created_at'] ?? '-')),
+                                DataCell(Text(item['notes'] ?? '-')),
+                              ]);
+                            }).toList(),
+                          ),
+                        ),
+                        // safe read (guard index)
+                        isExpanded: (index < isExpandedEventList.length) ? isExpandedEventList[index] : false,
+                      );
+                    }).toList(),
+                  )
+                ],
+              ),
         ),
-      ),
-    );
-  }
+        );
+
+    }
 }
