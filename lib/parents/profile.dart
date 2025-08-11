@@ -198,6 +198,7 @@ class _ProfilePageState extends State<ProfilePage> {
           content: SizedBox(
             width: double.maxFinite,
             child: Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
                 ListView.builder(
                   shrinkWrap: true,

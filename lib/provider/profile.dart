@@ -4,8 +4,10 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:vaccine_app/roleSelect.dart';
-// import React from "react";
-// import * as XLSX from "xlsx";
+import 'package:excel/excel.dart';
+import 'dart:io';
+import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class ProfilePage extends StatefulWidget {
   final int provID;
@@ -166,7 +168,6 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
-
   Future<void> _handleRefresh() async {
     await Future.wait([
       fetchProvData(),
@@ -222,6 +223,89 @@ class _ProfilePageState extends State<ProfilePage> {
       ),
     );
   }
+
+  Future<bool> requestStoragePermission() async {
+    if (Platform.isAndroid) {
+      if (await Permission.manageExternalStorage.isGranted) {
+        return true;
+      }
+      var result = await Permission.manageExternalStorage.request();
+      if (result.isGranted) {
+        return true;
+      }
+
+      if (await Permission.storage.isGranted) {
+        return true;
+      }
+      result = await Permission.storage.request();
+      if (result.isGranted) {
+        return true;
+      }
+
+      return false;
+    }
+    return true;
+  }
+
+  Future<void> exportToExcel(List<Map<String, dynamic>> data, String fileName) async {
+    if (data.isEmpty) return;
+
+    if (!await requestStoragePermission()) {
+      print("Storage permission denied");
+    }
+
+    final excel = Excel.createExcel();
+    final sheet = excel['Sheet1'];
+
+    final flattenedData = data.map((row) => flattenMap(row)).toList();
+    final headers = flattenedData.first.keys.toList();
+
+    // Header
+    sheet.appendRow(headers.map((h) => TextCellValue(h)).toList());
+
+    // Row
+    for (var row in flattenedData) {
+      sheet.appendRow(
+        headers.map((h) => TextCellValue(row[h]?.toString() ?? '')).toList(),
+      );
+    }
+
+    Directory? saveDir;
+    if (Platform.isAndroid) {
+      final downloadsDir = Directory('/storage/emulated/0/Download');
+      if (downloadsDir.existsSync()) {
+        saveDir = downloadsDir;
+      } else {
+        saveDir = await getExternalStorageDirectory();
+      }
+    } else {
+      saveDir = await getApplicationDocumentsDirectory();
+    }
+
+    final filePath = '${saveDir!.path}/$fileName.xlsx';
+    final fileBytes = excel.encode();
+    if (fileBytes != null) {
+      File(filePath)
+        ..createSync(recursive: true)
+        ..writeAsBytesSync(fileBytes);
+      print('Download success! Excel file saved to: $filePath');
+    }
+  }
+
+  Map<String, dynamic> flattenMap(Map<String, dynamic> map,
+      {String prefix = ''}) {
+    final result = <String, dynamic>{};
+    map.forEach((key, value) {
+      final newKey = prefix.isEmpty ? key : '$prefix.$key';
+      if (value is Map<String, dynamic>) {
+        result.addAll(flattenMap(value, prefix: newKey));
+      } else {
+        result[newKey] = value;
+      }
+    });
+    return result;
+  }
+
 
 
   @override
@@ -359,8 +443,27 @@ class _ProfilePageState extends State<ProfilePage> {
             children: [
               ExpansionPanel(
                 headerBuilder: (context, isExpanded) {
-                  return const ListTile(
-                    title: Text("See All Vaccinations"),
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          "See All Vaccinations",
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.download),
+                          tooltip: 'Download Excel',
+                          onPressed: () {
+                            exportToExcel(
+                              vaccinationList.cast<Map<String, dynamic>>(),
+                              "vaccinations",
+                            );
+                          },
+                        ),
+                      ],
+                    ),
                   );
                 },
                 body: SingleChildScrollView(
@@ -429,9 +532,25 @@ class _ProfilePageState extends State<ProfilePage> {
                       return ExpansionPanel(
                         headerBuilder: (context, isExpanded) {
                           return ListTile(
-                            title: Text(vaccineNames.isNotEmpty ? vaccineNames : 'No vaccine name'),
+                            title: Text(
+                              vaccineNames.isNotEmpty ? vaccineNames : 'No vaccine name',
+                            ),
                             subtitle: Text("$dates"),
+                            trailing: IconButton(
+                              icon: const Icon(Icons.download),
+                              tooltip: 'Download Excel',
+                              onPressed: () {
+                                exportToExcel(
+                                  items.cast<Map<String, dynamic>>(), // Export only this event's items
+                                  "event_${eventId ?? 'no_id'}_vaccinations",
+                                );
+                              },
+                            ),
                           );
+                          //   ListTile(
+                          //   title: Text(vaccineNames.isNotEmpty ? vaccineNames : 'No vaccine name'),
+                          //   subtitle: Text("$dates"),
+                          // );
                         },
                         body: SingleChildScrollView(
                           scrollDirection: Axis.horizontal,
@@ -455,7 +574,6 @@ class _ProfilePageState extends State<ProfilePage> {
                             }).toList(),
                           ),
                         ),
-                        // safe read (guard index)
                         isExpanded: (index < isExpandedEventList.length) ? isExpandedEventList[index] : false,
                       );
                     }).toList(),
