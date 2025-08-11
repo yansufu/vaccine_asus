@@ -3,9 +3,14 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vaccine_app/roleSelect.dart';
 import 'parents/navbar.dart';
 import 'provider/navbar.dart';
+import 'parents/noti_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // init notif
+  await NotiService().initNotification();
+
   final prefs = await SharedPreferences.getInstance();
  
   final parentIdInt = prefs.getInt('parent_id');

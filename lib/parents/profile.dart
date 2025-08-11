@@ -10,6 +10,7 @@ import "package:vaccine_app/roleSelect.dart";
 import 'childForm.dart';
 
 
+
 class ProfilePage extends StatefulWidget {
   final int childID;
   final String parentID;
@@ -268,17 +269,17 @@ class _ProfilePageState extends State<ProfilePage> {
 }
 
   void _selectDate() async {
-      DateTime? pickedDate = await showDatePicker(
-        context: context,
-        initialDate: DateTime.now(),
-        firstDate: DateTime(2000),
-        lastDate: DateTime.now(),
-      );
-      if (pickedDate != null) {
-      String formattedDate = pickedDate.toUtc().toIso8601String();
-        dobController.text = formattedDate;
-      }
+    DateTime? pickedDate = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(2000),
+      lastDate: DateTime.now(),
+    );
+    if (pickedDate != null) {
+      String formattedDate = pickedDate.toString().split(' ')[0];
+      dobController.text = formattedDate;
     }
+  }
 
   Widget profileField(String label, TextEditingController controller, 
   {bool readOnly = false, VoidCallback? onTap, TextInputType? type}) {

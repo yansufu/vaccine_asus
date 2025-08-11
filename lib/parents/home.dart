@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'noti_service.dart';
+
 
 class HomeParent extends StatefulWidget {
   final String parentID;
@@ -346,6 +348,14 @@ class _HomeParentState extends State<HomeParent> {
                   ),
 
                   //PRIMARY VACCINE TABLE CONTAINER--------------------------------------------------------------
+                  ElevatedButton(
+                      onPressed: (){
+                        NotiService().showNotification(
+                          title: "title",
+                          body : "body",
+                        );
+                      },
+                      child: Text("send notif")),
                   Container(
                     alignment: Alignment.topLeft,
                     width: screenWidth * 0.90,
