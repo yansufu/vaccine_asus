@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1028563929902",
+    "project_id": "fir-project-94a58",
+    "storage_bucket": "fir-project-94a58.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1028563929902:android:10f30bf337251fa28788bf",
+        "android_client_info": {
+          "package_name": "com.example.vaccine_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAv6fH2T8KQbkfLPLRSQOIfO2Xd8LjihX8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
