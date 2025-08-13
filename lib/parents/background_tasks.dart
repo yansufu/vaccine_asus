@@ -8,7 +8,8 @@ final notiService = NotiService();
 @pragma('vm:entry-point')
 void callbackDispatcher() {
   Workmanager().executeTask((task, inputData) async {
-    print("Background task started");
+    print("Background task started: $task");
+
     if (task == "checkVaccination") {
       await notiService.initNotification();
       print("Checking vaccination dates...");
@@ -17,30 +18,29 @@ void callbackDispatcher() {
       if (childId == null) return Future.value(false);
 
       try {
-        // Fetch child data (no setState)
-        final childResponse = await http.get(
-          Uri.parse('http://10.0.2.2:8000/api/child/$childId'),
-        );
-
+        // Fetch child data
+        final childResponse =
+        await http.get(Uri.parse('http://10.0.2.2:8000/api/child/$childId'));
         if (childResponse.statusCode != 200) return Future.value(false);
 
         final childData = json.decode(childResponse.body);
         final childName = childData['name'];
         final childDOB = DateTime.parse(childData['date_of_birth']);
 
-        // Fetch next period
+        // Fetch vaccination status
         final nextPeriodResponse = await http.get(
-          Uri.parse('http://10.0.2.2:8000/api/child/$childId/vaccinations/nextStatus'),
+          Uri.parse(
+              'http://10.0.2.2:8000/api/child/$childId/vaccinations/status'),
         );
-
         if (nextPeriodResponse.statusCode != 200) return Future.value(false);
 
-        final nextPeriodList = json.decode(nextPeriodResponse.body) as List<dynamic>;
-        final notCompleted = nextPeriodList.where((item) => item['status'] == false).toList();
+        final nextPeriodList =
+        json.decode(nextPeriodResponse.body) as List<dynamic>;
+        final notCompleted =
+        nextPeriodList.where((item) => item['status'] == false).toList();
 
         if (notCompleted.isEmpty) return Future.value(true);
 
-        // Calculate days until next period
         final now = DateTime.now();
         final nextPeriodDate = DateTime(
           now.year,
@@ -58,14 +58,19 @@ void callbackDispatcher() {
         }
 
         final daysUntil = adjustedNextPeriod.difference(now).inDays;
+        final missingNames = notCompleted.map<String>((item) => item['name'] as String).toList();
 
-        // Show notification if exactly 7 days left
         if (daysUntil > 0 && daysUntil <= 7) {
-          final missingNames = notCompleted.map((item) => item['name']).join(', ');
-          await notiService.showNotification(
+          await notiService.showMissingVaccination(
+            childName: childName,
+            missingNames: missingNames,
             id: childId,
-            title: "Upcoming Vaccination",
-            body: "$missingNames is due for $childName in $daysUntil day${daysUntil > 1 ? 's' : ''}.",
+          );
+        } else {
+          await notiService.showMissingVaccination(
+            childName: childName,
+            missingNames: missingNames,
+            id: childId,
           );
         }
       } catch (e) {
